@@ -1,0 +1,10 @@
+# Ignore generated planet textures but keep the folder
+static/textures/*.png
+static/textures/*.glb
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+venv/
