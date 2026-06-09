@@ -907,6 +907,43 @@ function buildPlanet(a){
       cMesh.material=cMat;
     }
 
+    // Aurora
+    if(a.atmo&&a.atmo.includes('a shimmering aurora of light curtains in the upper atmosphere')){
+      const aCv=document.createElement('canvas');aCv.width=512;aCv.height=256;
+      const aCtx=aCv.getContext('2d');
+      [[256,0,150,'rgba(80,255,120,0.55)','rgba(60,180,255,0.45)','rgba(160,80,255,0.3)'],[256,256,150,'rgba(80,255,120,0.55)','rgba(60,180,255,0.45)','rgba(160,80,255,0.3)']].forEach(([cx,cy,r,c1,c2,c3])=>{
+        const g=aCtx.createRadialGradient(cx,cy,0,cx,cy,r);
+        g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(0.25,c1);g.addColorStop(0.5,c2);g.addColorStop(0.7,c3);g.addColorStop(1,'rgba(0,0,0,0)');
+        aCtx.fillStyle=g;aCtx.fillRect(0,0,512,256);
+      });
+      const aurDT=loadDT(aCv,'aurora');
+      const aurMesh=BABYLON.MeshBuilder.CreateSphere("aurora",{diameter:2.45,segments:32},bjsScene);
+      const aurMat=new BABYLON.StandardMaterial("aurm",bjsScene);
+      aurMat.emissiveTexture=aurDT;aurMat.emissiveTexture.hasAlpha=true;
+      aurMat.opacityTexture=aurDT;aurMat.backFaceCulling=false;aurMat.disableLighting=true;
+      aurMesh.material=aurMat;glowLayer.addIncludedOnlyMesh(aurMesh);
+      bjsScene.registerBeforeRender(()=>{aurMesh.rotation.y+=0.0008;});
+    }
+    // Volcanic smoke
+    if(a.atmo&&a.atmo.includes('volcanic ash and smoke rising from eruptions')&&(a.terrain&&a.terrain.includes('towering active volcanoes')||a.type==='volcanic / lava')){
+      const smCv=genCloudTex(seed+777);
+      const smCtx=smCv.getContext('2d');
+      smCtx.globalCompositeOperation='source-atop';smCtx.fillStyle='rgba(35,25,15,0.82)';smCtx.fillRect(0,0,smCv.width,smCv.height);smCtx.globalCompositeOperation='source-over';
+      const smDT=loadDT(smCv,'smoke');
+      const smMesh=BABYLON.MeshBuilder.CreateSphere("smoke",{diameter:2.06,segments:32},bjsScene);
+      const smMat=new BABYLON.StandardMaterial("smm",bjsScene);
+      smMat.diffuseTexture=smDT;smMat.diffuseTexture.hasAlpha=true;smMat.opacityTexture=smDT;
+      smMat.emissiveColor=new BABYLON.Color3(0.12,0.10,0.08);smMat.alpha=0.55;
+      smMesh.material=smMat;
+    }
+    // Thick fog
+    if(a.atmo&&a.atmo.includes('thick ground-level fog')){
+      const fogMesh=BABYLON.MeshBuilder.CreateSphere("fog",{diameter:2.04,segments:24},bjsScene);
+      const fogMat=new BABYLON.StandardMaterial("fogm",bjsScene);
+      fogMat.emissiveColor=new BABYLON.Color3(0.85,0.88,0.92);fogMat.alpha=0.18;fogMat.backFaceCulling=false;
+      fogMesh.material=fogMat;
+    }
+
     // Rings
     if(a.extreme&&a.extreme.includes('enormous planetary rings')){
       const rDT=new BABYLON.DynamicTexture("rings",{width:256,height:256},bjsScene,true);
