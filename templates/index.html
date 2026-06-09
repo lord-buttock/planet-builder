@@ -630,6 +630,13 @@ function genPlanetTex(a){
   const surf=a.surface||[];
   const terr=a.terrain||[];
   const bumpSt=terr.includes('vast mountain ranges')?9.0:surf.includes('bare jagged rock')?8.5:6.0;
+  const sfOcean=surf.includes('deep oceans'),sfLava=surf.includes('lava flows'),sfIce=surf.includes('thick ice sheets');
+  const sfForest=surf.includes('dense forests'),sfAlien=surf.includes('alien vegetation'),sfCrystal=surf.includes('giant crystal formations');
+  const sfToxic=surf.includes('pools of toxic liquid'),sfDesert=surf.includes('vast deserts');
+  const trMtn=terr.includes('vast mountain ranges');
+  const hasVegLife=['plant-like','simple-animals','complex-animals','intelligent'].includes(a.lifeType);
+  const noVegType=type==='icy'||type==='volcanic / lava'||type==='desert / sandy'||type==='gas giant';
+  const vegTint=hasVegLife&&!noVegType;
 
   const colCv=document.createElement('canvas');colCv.width=W;colCv.height=H;
   const norCv=document.createElement('canvas');norCv.width=W;norCv.height=H;
@@ -657,20 +664,16 @@ function genPlanetTex(a){
       let col=_ramp(ramp,h);
       if(mc){const bl=Math.max(0,Math.min(1,1-Math.abs(h-0.55)/0.45))*0.35;col=col.map((c,j)=>c*(1-bl)+mc[j]*bl);}
       // === SURFACE COVERAGE ===
-      if(surf.includes('deep oceans')&&h<0.38){const s=Math.pow((0.38-h)/0.38,0.6);col=[col[0]*(1-s*0.8)+8*s*0.8,col[1]*(1-s*0.6)+32*s*0.6,col[2]*(1-s*0.3)+155*s*0.3];}
-      if(surf.includes('lava flows')&&h<0.32&&!isVolcanic){const em=Math.pow((0.32-h)/0.32,0.7);col=col.map((c,j)=>c*(1-em*0.8)+[235,75,0][j]*em*0.8);const ep=em*1.1;eImg.data[idx]=Math.round(Math.min(255,255*ep));eImg.data[idx+1]=Math.round(Math.min(255,85*ep));eImg.data[idx+2]=0;eImg.data[idx+3]=Math.round(ep*220);}
-      if(surf.includes('thick ice sheets')&&h>0.75){const s=Math.min(1,(h-0.75)/0.18);col=col.map((c,j)=>c*(1-s*0.85)+[210,225,245][j]*s*0.85);}
-      if(surf.includes('dense forests')&&h>=0.40&&h<=0.72){const s=Math.min(1,1-Math.abs(h-0.56)/0.16)*0.55;col=col.map((c,j)=>c*(1-s)+[22,95,35][j]*s);}
-      if(surf.includes('alien vegetation')&&h>=0.38&&h<=0.70){const s=Math.min(1,1-Math.abs(h-0.54)/0.16)*0.55;col=col.map((c,j)=>c*(1-s)+[55,185,25][j]*s);}
-      if(surf.includes('giant crystal formations')&&h>=0.50&&h<=0.80){const s=Math.min(1,1-Math.abs(h-0.65)/0.15)*0.45;col=col.map((c,j)=>c*(1-s)+[100,40,210][j]*s);const ep=s*0.5;eImg.data[idx]=Math.round(Math.min(255,80*ep));eImg.data[idx+1]=Math.round(Math.min(255,20*ep));eImg.data[idx+2]=Math.round(Math.min(255,ep*220));eImg.data[idx+3]=Math.round(ep*200);}
-      if(surf.includes('pools of toxic liquid')&&h<0.36){const s=Math.pow((0.36-h)/0.36,0.8)*0.7;col=col.map((c,j)=>c*(1-s)+[30,180,20][j]*s);}
-      if(surf.includes('vast deserts')&&h>=0.35&&h<=0.70){const s=Math.min(1,1-Math.abs(h-0.525)/0.175)*0.5;col=col.map((c,j)=>c*(1-s)+[195,155,80][j]*s);}
-      // Life type green tint (plant-like or higher, non-hostile planet types)
-      const hasVegLife=['plant-like','simple-animals','complex-animals','intelligent'].includes(a.lifeType);
-      const noVegType=type==='icy'||type==='volcanic / lava'||type==='desert / sandy'||type==='gas giant';
-      if(hasVegLife&&!noVegType&&h>=0.38&&h<=0.70){const s=Math.min(1,1-Math.abs(h-0.54)/0.16)*0.18;col=col.map((c,j)=>c*(1-s)+[35,110,40][j]*s);}
-      // Mountain peak brightening
-      if(terr.includes('vast mountain ranges')&&h>0.72){const s=Math.min(1,(h-0.72)/0.2)*0.7;col=col.map((c,j)=>c*(1-s)+[188,188,192][j]*s);}
+      if(sfOcean&&h<0.38){const s=Math.pow((0.38-h)/0.38,0.6);col=[col[0]*(1-s*0.8)+8*s*0.8,col[1]*(1-s*0.6)+32*s*0.6,col[2]*(1-s*0.3)+155*s*0.3];}
+      if(sfLava&&h<0.32&&!isVolcanic){const em=Math.pow((0.32-h)/0.32,0.7);col=col.map((c,j)=>c*(1-em*0.8)+[235,75,0][j]*em*0.8);const ep=em*1.1;eImg.data[idx]=Math.round(Math.min(255,255*ep));eImg.data[idx+1]=Math.round(Math.min(255,85*ep));eImg.data[idx+2]=0;eImg.data[idx+3]=Math.round(ep*220);}
+      if(sfIce&&h>0.75){const s=Math.min(1,(h-0.75)/0.18);col=col.map((c,j)=>c*(1-s*0.85)+[210,225,245][j]*s*0.85);}
+      if(sfForest&&h>=0.40&&h<=0.72){const s=Math.min(1,1-Math.abs(h-0.56)/0.16)*0.55;col=col.map((c,j)=>c*(1-s)+[22,95,35][j]*s);}
+      if(sfAlien&&h>=0.38&&h<=0.70){const s=Math.min(1,1-Math.abs(h-0.54)/0.16)*0.55;col=col.map((c,j)=>c*(1-s)+[55,185,25][j]*s);}
+      if(sfCrystal&&h>=0.50&&h<=0.80){const s=Math.min(1,1-Math.abs(h-0.65)/0.15)*0.45;col=col.map((c,j)=>c*(1-s)+[100,40,210][j]*s);const ep=s*0.5;eImg.data[idx]=Math.round(Math.min(255,80*ep));eImg.data[idx+1]=Math.round(Math.min(255,20*ep));eImg.data[idx+2]=Math.round(Math.min(255,ep*220));eImg.data[idx+3]=Math.round(ep*200);}
+      if(sfToxic&&h<0.36){const s=Math.pow((0.36-h)/0.36,0.8)*0.7;col=col.map((c,j)=>c*(1-s)+[30,180,20][j]*s);}
+      if(sfDesert&&h>=0.35&&h<=0.70){const s=Math.min(1,1-Math.abs(h-0.525)/0.175)*0.5;col=col.map((c,j)=>c*(1-s)+[195,155,80][j]*s);}
+      if(vegTint&&h>=0.38&&h<=0.70){const s=Math.min(1,1-Math.abs(h-0.54)/0.16)*0.18;col=col.map((c,j)=>c*(1-s)+[35,110,40][j]*s);}
+      if(trMtn&&h>0.72){const s=Math.min(1,(h-0.72)/0.2)*0.7;col=col.map((c,j)=>c*(1-s)+[188,188,192][j]*s);}
       if(hasSpecial){const vn2=_tri(nx,ny,nz,5.5,seed+9999,4),vm=Math.pow(Math.max(0,1-Math.abs(vn2-0.5)/0.06),3)*0.78;if(vm>0.01)col=col.map((c,j)=>c*(1-vm)+sc[j]*vm);if(vm>0.35){eImg.data[idx]=Math.round(sc[0]*vm*0.65);eImg.data[idx+1]=Math.round(sc[1]*vm*0.65);eImg.data[idx+2]=Math.round(sc[2]*vm*0.65);eImg.data[idx+3]=Math.round(vm*200);}}
       if(emThresh>0&&h<emThresh){const em=1-h/emThresh;const lc=isVolcanic?[255,Math.round(120+em*80),0]:[Math.round(185+em*55),Math.round(100+em*50),255];col=col.map((c,j)=>c*(1-em*0.85)+lc[j]*em*0.85);eImg.data[idx]=Math.round(Math.min(255,lc[0]*em*1.3));eImg.data[idx+1]=Math.round(Math.min(255,lc[1]*em));eImg.data[idx+2]=Math.round(Math.min(255,lc[2]*em*0.8));eImg.data[idx+3]=Math.round(em*255);}
       cImg.data[idx]=Math.round(Math.max(0,Math.min(255,col[0])));cImg.data[idx+1]=Math.round(Math.max(0,Math.min(255,col[1])));cImg.data[idx+2]=Math.round(Math.max(0,Math.min(255,col[2])));cImg.data[idx+3]=255;
