@@ -169,11 +169,11 @@ select option{background:#0d1f38;color:#e2e8f0;}
   background:linear-gradient(120deg,#a78bfa,#7dd3fc);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
 .planet-header-text p{font-size:0.8rem;color:#334155;margin-top:0.15rem;}
-.planet-body{display:grid;grid-template-columns:1fr 1fr;min-height:400px;overflow:hidden;}
-@media(max-width:620px){.planet-body{grid-template-columns:1fr;}}
+.planet-body{display:grid;grid-template-columns:360px 1fr;min-height:400px;overflow:hidden;}
+@media(max-width:700px){.planet-body{grid-template-columns:1fr;}.planet-canvas-col{width:100%;}.#planet-canvas-3d{width:100%;height:300px;}}
 .planet-canvas-col{position:relative;display:flex;align-items:center;justify-content:center;
-  background:transparent;min-height:340px;padding:1rem;min-width:0;overflow:hidden;}
-#planet-canvas-3d{display:block;cursor:grab;border-radius:12px;max-width:100%;}
+  background:transparent;min-height:360px;padding:1rem;width:360px;flex-shrink:0;}
+#planet-canvas-3d{display:block;cursor:grab;border-radius:12px;width:340px;height:340px;}
 #planet-canvas-3d:active{cursor:grabbing;}
 .drag-hint{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);
   font-size:0.7rem;color:#1e3a5f;letter-spacing:0.14em;text-transform:uppercase;
@@ -703,9 +703,8 @@ function buildPlanet(a){
   // Tear down previous engine
   if(bjsEngine){if(bjsAnim)cancelAnimationFrame(bjsAnim);bjsEngine.dispose();bjsEngine=null;bjsScene=null;}
 
-  // Size canvas
-  const pCol=canvas.parentElement;
-  const SZ=Math.min(pCol.clientWidth-32||360,380);
+  // Fixed canvas size — reliable across all layouts
+  const SZ=340;
   canvas.width=SZ;canvas.height=SZ;
 
   setTimeout(()=>{
