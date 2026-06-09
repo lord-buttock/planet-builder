@@ -169,21 +169,21 @@ select option{background:#0d1f38;color:#e2e8f0;}
   background:linear-gradient(120deg,#a78bfa,#7dd3fc);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
 .planet-header-text p{font-size:0.8rem;color:#334155;margin-top:0.15rem;}
-.planet-body{display:grid;grid-template-columns:1fr 1fr;min-height:400px;}
+.planet-body{display:grid;grid-template-columns:1fr 1fr;min-height:400px;overflow:hidden;}
 @media(max-width:620px){.planet-body{grid-template-columns:1fr;}}
 .planet-canvas-col{position:relative;display:flex;align-items:center;justify-content:center;
-  background:transparent;min-height:340px;padding:1rem;}
-#planet-canvas-3d{display:block;cursor:grab;border-radius:12px;}
+  background:transparent;min-height:340px;padding:1rem;min-width:0;overflow:hidden;}
+#planet-canvas-3d{display:block;cursor:grab;border-radius:12px;max-width:100%;}
 #planet-canvas-3d:active{cursor:grabbing;}
 .drag-hint{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);
   font-size:0.7rem;color:#1e3a5f;letter-spacing:0.14em;text-transform:uppercase;
   display:flex;align-items:center;gap:0.5rem;pointer-events:none;white-space:nowrap;}
 .drag-hint::before,.drag-hint::after{content:'';width:18px;height:1px;background:#1e3a5f;}
-.planet-info-col{border-left:1px solid rgba(255,255,255,0.05);padding:1.75rem 1.75rem 1.75rem;
-  display:flex;flex-direction:column;gap:0;overflow-y:auto;}
+.planet-info-col{border-left:1px solid rgba(255,255,255,0.05);padding:1.75rem 1.25rem;
+  display:flex;flex-direction:column;gap:0;overflow-y:auto;min-width:0;overflow-x:hidden;}
 @media(max-width:620px){.planet-info-col{border-left:none;border-top:1px solid rgba(255,255,255,0.05);}}
-.planet-name-display{font-family:'Orbitron',monospace;font-size:1.45rem;font-weight:900;
-  color:#e2e8f0;letter-spacing:0.04em;line-height:1.1;margin-bottom:0.5rem;word-break:break-word;}
+.planet-name-display{font-family:'Orbitron',monospace;font-size:1.2rem;font-weight:900;
+  color:#e2e8f0;letter-spacing:0.03em;line-height:1.2;margin-bottom:0.5rem;word-break:break-word;overflow-wrap:break-word;}
 .planet-badges{display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:1.4rem;}
 .badge{font-size:0.7rem;font-weight:700;padding:0.28rem 0.75rem;border-radius:999px;letter-spacing:0.04em;}
 .badge-type{background:rgba(167,139,250,0.14);color:#c4b5fd;border:1px solid rgba(167,139,250,0.28);}
@@ -191,7 +191,7 @@ select option{background:#0d1f38;color:#e2e8f0;}
 .badge-life-no{background:rgba(239,68,68,0.11);color:#fca5a5;border:1px solid rgba(239,68,68,0.28);}
 .badge-life-maybe{background:rgba(251,191,36,0.11);color:#fcd34d;border:1px solid rgba(251,191,36,0.28);}
 .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin-bottom:1.4rem;}
-.stat-item{background:rgba(255,255,255,0.025);border-radius:11px;padding:0.7rem 0.75rem;}
+.stat-item{background:rgba(255,255,255,0.025);border-radius:11px;padding:0.6rem 0.65rem;}
 .stat-label{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:#334155;margin-bottom:0.22rem;}
 .stat-value{font-size:0.9rem;font-weight:700;color:#cbd5e1;line-height:1.2;}
 .features-title{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:#334155;margin-bottom:0.55rem;}
