@@ -775,6 +775,17 @@ function loadDT(cv,name){
   dt.getContext().drawImage(cv,0,0);dt.update();return dt;
 }
 
+function genMoonTex(seed){
+  const W=128,H=64,PI=Math.PI,cv=document.createElement('canvas');cv.width=W;cv.height=H;
+  const ctx=cv.getContext('2d'),img=ctx.createImageData(W,H);
+  const ramp=[[0,[28,22,20]],[.3,[65,58,52]],[.6,[95,88,80]],[.85,[118,110,102]],[1,[140,130,122]]];
+  for(let py=0;py<H;py++){const lat=py/H*PI,sl=Math.sin(lat),cl=Math.cos(lat);
+    for(let px=0;px<W;px++){const lon=px/W*2*PI,nx=sl*Math.cos(lon),ny=cl,nz=sl*Math.sin(lon);
+      const h=Math.max(0,Math.min(1,_tri(nx,ny,nz,3,seed,5)*0.7+_tri(nx,ny,nz,12,seed+100,4)*0.3));
+      const col=_ramp(ramp,h);const i=(py*W+px)*4;
+      img.data[i]=Math.round(col[0]);img.data[i+1]=Math.round(col[1]);img.data[i+2]=Math.round(col[2]);img.data[i+3]=255;}}
+  ctx.putImageData(img,0,0);return cv;
+}
 function buildPlanet(a){
   const sec=document.getElementById('planet-section');
   const col=document.getElementById('planet-info-col');
