@@ -520,7 +520,7 @@ select option{background:#0d1f38;color:#e2e8f0;}
     </div>
     <div class="planet-tabs" id="planet-tabs">
       <button class="planet-tab active" onclick="switchTab('view3d')">🌍 3D Model</button>
-      <button class="planet-tab" onclick="switchTab('render')" id="render-tab">🎨 Cinematic Render</button>
+      <button class="planet-tab" onclick="switchTab('render')" id="render-tab" style="display:none;">🎨 Cinematic Render</button>
     </div>
     <div class="planet-body">
       <div class="planet-tab-pane active" id="pane-view3d" style="flex:1;display:flex;">
@@ -1020,7 +1020,10 @@ async function buildPlanet(a){
   if(renderCol) renderCol.innerHTML = infoHTML;
   // Dim render tab until render is ready (if no Blender)
   const rt=document.getElementById('render-tab');
-  if(rt && !blenderOK){rt.style.opacity='0.4';rt.style.pointerEvents='none';}
+  if(rt){
+    if(blenderOK){ rt.style.display='block'; }
+    else { rt.style.display='none'; }
+  }
 }
 
 function buildPlanetScene_API(a, scene, pg2, texData){
