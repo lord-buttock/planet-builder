@@ -169,30 +169,20 @@ select option{background:#0d1f38;color:#e2e8f0;}
   background:linear-gradient(120deg,#a78bfa,#7dd3fc);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
 .planet-header-text p{font-size:0.8rem;color:#334155;margin-top:0.15rem;}
-.planet-body{display:grid;grid-template-columns:360px 1fr;min-height:400px;overflow:hidden;}
-
-/* ── RESPONSIVE: tablet ── */
-@media(max-width:820px){
-  .planet-body{grid-template-columns:340px 1fr;}
-}
-/* ── RESPONSIVE: mobile — stack vertically ── */
-@media(max-width:680px){
-  .planet-body{grid-template-columns:1fr;grid-template-rows:auto auto;}
-  .planet-canvas-col{width:100%;min-height:280px;padding:0.75rem;}
-  #planet-canvas-3d{width:280px;height:280px;margin:0 auto;display:block;}
-  .planet-info-col{border-left:none;border-top:1px solid rgba(255,255,255,0.05);padding:1.25rem;}
-  .planet-header{padding:1rem 1.25rem 0.5rem;}
-  .stat-grid{grid-template-columns:1fr 1fr;}
+.planet-body{display:grid;grid-template-columns:1fr 1fr;min-height:380px;}
+@media(max-width:620px){
+  .planet-body{grid-template-columns:1fr;}
+  .planet-info-col{border-left:none;border-top:1px solid rgba(255,255,255,0.05);}
 }
 .planet-canvas-col{position:relative;display:flex;align-items:center;justify-content:center;
-  background:transparent;min-height:360px;padding:1rem;width:360px;flex-shrink:0;}
-#planet-canvas-3d{display:block;cursor:grab;border-radius:12px;width:340px;height:340px;}
+  background:transparent;min-height:340px;padding:1rem;min-width:0;}
+#planet-canvas-3d{display:block;cursor:grab;border-radius:12px;}
 #planet-canvas-3d:active{cursor:grabbing;}
 .drag-hint{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);
   font-size:0.7rem;color:#1e3a5f;letter-spacing:0.14em;text-transform:uppercase;
   display:flex;align-items:center;gap:0.5rem;pointer-events:none;white-space:nowrap;}
 .drag-hint::before,.drag-hint::after{content:'';width:18px;height:1px;background:#1e3a5f;}
-.planet-info-col{border-left:1px solid rgba(255,255,255,0.05);padding:1.75rem 1.25rem;
+.planet-info-col{border-left:1px solid rgba(255,255,255,0.05);padding:1.5rem 1.25rem;
   display:flex;flex-direction:column;gap:0;overflow-y:auto;min-width:0;overflow-x:hidden;}
 @media(max-width:620px){.planet-info-col{border-left:none;border-top:1px solid rgba(255,255,255,0.05);}}
 .planet-name-display{font-family:'Orbitron',monospace;font-size:1.2rem;font-weight:900;
@@ -716,9 +706,11 @@ function buildPlanet(a){
   // Tear down previous engine
   if(bjsEngine){if(bjsAnim)cancelAnimationFrame(bjsAnim);bjsEngine.dispose();bjsEngine=null;bjsScene=null;}
 
-  // Responsive canvas size
-  const isMobile=window.innerWidth<=680;
-  const SZ=isMobile?280:340;
+  // Measure column width properly, with fallback
+  const pCol=canvas.parentElement;
+  const colRect=pCol.getBoundingClientRect();
+  const colW=colRect.width>60?colRect.width:window.innerWidth*0.48;
+  const SZ=Math.max(220,Math.min(Math.floor(colW)-32,360));
   canvas.width=SZ;canvas.height=SZ;
 
   setTimeout(()=>{
