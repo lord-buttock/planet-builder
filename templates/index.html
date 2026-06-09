@@ -762,6 +762,7 @@ function buildPlanet(a){
 
     // Lights
     const _li=a.light||'';
+    const _gl=a.glow||'';
     const sunInt=_li.includes('dimly')?0.7:_li.includes('within')?0.5:_li.includes('shadow')?4.2:5.5;
     const fillInt=_li.includes('dimly')?0.15:_li.includes('within')?0.12:0.4;
     const sunDir=_li.includes('shadow')?new BABYLON.Vector3(-0.5,-0.2,-2.8).normalize():new BABYLON.Vector3(-1.8,-0.8,-2.5).normalize();
@@ -813,7 +814,6 @@ function buildPlanet(a){
     const mat=new BABYLON.PBRMaterial("pm",bjsScene);
     mat.albedoTexture=colT;mat.bumpTexture=norT;mat.bumpTexture.level=1.8;
     mat.emissiveTexture=emT;
-    const _gl=a.glow||'';
     const emInt=(_gl.includes('cracks')||_gl.includes('rivers')||_li.includes('within'))?2.2:1.3;
     mat.emissiveIntensity=emInt;
     mat.roughness=(TT[a.type]&&a.type==='icy')?0.15:(a.type==='crystal')?0.1:0.82;
