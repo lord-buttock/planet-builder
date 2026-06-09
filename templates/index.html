@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planet Prompt Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#050b18;color:#e2e8f0;font-family:'Nunito',sans-serif;min-height:100vh;overflow-x:hidden;}
+canvas#bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+.wrap{position:relative;z-index:1;max-width:820px;margin:0 auto;padding:2rem 1.5rem 5rem;}
+.hero{text-align:center;padding:3.5rem 0 2.5rem;}
+.hero-emoji{font-size:5rem;display:block;animation:float 5s ease-in-out infinite;}
+@keyframes float{0%,100%{transform:translateY(0) rotate(-3deg);}50%{transform:translateY(-16px) rotate(3deg);}}
+.hero h1{font-family:'Orbitron',monospace;font-size:clamp(1.5rem,4vw,2.6rem);font-weight:900;
+  background:linear-gradient(120deg,#7dd3fc 0%,#a78bfa 50%,#34d399 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  letter-spacing:0.04em;margin:0.75rem 0 1rem;}
+.hero p{font-size:1.05rem;color:#8fa4bc;line-height:1.8;max-width:540px;margin:0 auto;}
+.hero .steps-hint{display:inline-flex;align-items:center;gap:0.5rem;background:rgba(125,211,252,0.08);
+  border:1px solid rgba(125,211,252,0.2);border-radius:999px;
+  padding:0.45rem 1rem;margin-top:1.25rem;font-size:0.85rem;color:#7dd3fc;font-weight:700;}
+.card{background:rgba(10,22,44,0.88);border:1px solid rgba(255,255,255,0.07);
+  border-radius:22px;padding:2rem;margin-bottom:1.5rem;backdrop-filter:blur(12px);transition:border-color 0.3s;}
+.card:focus-within{border-color:rgba(125,211,252,0.25);}
+.card-head{display:flex;align-items:center;gap:1rem;margin-bottom:1.75rem;}
+.card-icon{width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.75rem;flex-shrink:0;}
+.card-title{font-family:'Orbitron',monospace;font-size:0.95rem;font-weight:700;letter-spacing:0.05em;}
+.card-sub{font-size:0.82rem;color:#64748b;margin-top:0.2rem;}
+.t-blue .card-icon{background:rgba(59,130,246,0.15);} .t-blue .card-title{color:#93c5fd;}
+.t-rose .card-icon{background:rgba(244,63,94,0.15);} .t-rose .card-title{color:#fda4af;}
+.t-orange .card-icon{background:rgba(249,115,22,0.15);} .t-orange .card-title{color:#fdba74;}
+.t-purple .card-icon{background:rgba(168,85,247,0.15);} .t-purple .card-title{color:#d8b4fe;}
+.t-teal .card-icon{background:rgba(20,184,166,0.15);} .t-teal .card-title{color:#5eead4;}
+.t-indigo .card-icon{background:rgba(99,102,241,0.15);} .t-indigo .card-title{color:#a5b4fc;}
+.t-amber .card-icon{background:rgba(234,179,8,0.15);} .t-amber .card-title{color:#fde047;}
+.t-green .card-icon{background:rgba(34,197,94,0.15);} .t-green .card-title{color:#86efac;}
+.q{margin-bottom:1.25rem;}
+.q label.qlabel{display:block;font-size:0.95rem;font-weight:700;color:#cbd5e1;margin-bottom:0.55rem;}
+input[type=text],select{background:rgba(20,35,60,0.85);border:1px solid rgba(100,116,139,0.35);
+  border-radius:10px;color:#e2e8f0;font-family:'Nunito',sans-serif;font-size:0.95rem;
+  padding:0.65rem 1rem;width:100%;outline:none;transition:border-color 0.2s,background 0.2s;}
+input[type=text]:focus,select:focus{border-color:rgba(125,211,252,0.5);background:rgba(20,35,60,1);}
+select{cursor:pointer;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 1rem center;padding-right:2.5rem;}
+select option{background:#0d1f38;color:#e2e8f0;}
+.pill-grid{display:flex;flex-wrap:wrap;gap:0.5rem;}
+.pill{display:inline-flex;align-items:center;gap:0.45rem;background:rgba(20,35,60,0.7);
+  border:1px solid rgba(100,116,139,0.3);border-radius:999px;padding:0.45rem 0.9rem;cursor:pointer;
+  font-size:0.88rem;color:#94a3b8;font-family:'Nunito',sans-serif;font-weight:600;
+  transition:all 0.18s;user-select:none;}
+.pill:hover{border-color:rgba(125,211,252,0.35);color:#cbd5e1;}
+.pill.on{background:rgba(125,211,252,0.12);border-color:rgba(125,211,252,0.5);color:#7dd3fc;}
+.pill input{position:absolute;opacity:0;width:0;height:0;}
+.pill .dot{width:8px;height:8px;border-radius:50%;background:currentColor;opacity:0;transition:opacity 0.15s;}
+.pill.on .dot{opacity:1;}
+.view-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.view-card{background:rgba(20,35,60,0.7);border:2px solid rgba(100,116,139,0.25);
+  border-radius:18px;padding:1.4rem 1.2rem;cursor:pointer;transition:all 0.2s;
+  display:flex;flex-direction:column;align-items:center;text-align:center;gap:0.6rem;}
+.view-card:hover{border-color:rgba(125,211,252,0.35);}
+.view-card.on{background:rgba(125,211,252,0.1);border-color:rgba(125,211,252,0.55);}
+.view-card.on.surface-pick{background:rgba(168,85,247,0.1);border-color:rgba(168,85,247,0.55);}
+.view-card input{position:absolute;opacity:0;width:0;height:0;}
+.view-card .vi{font-size:2.5rem;line-height:1;}
+.view-card .vt{font-size:0.95rem;font-weight:800;color:#cbd5e1;}
+.view-card .vd{font-size:0.8rem;color:#64748b;line-height:1.5;}
+.view-card.on .vt{color:#7dd3fc;}
+.view-card.on.surface-pick .vt{color:#d8b4fe;}
+.surface-extra{display:none;margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid rgba(168,85,247,0.2);}
+.surface-extra.show{display:block;}
+.surface-extra .qlabel{color:#d8b4fe !important;}
+.style-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:0.75rem;}
+.style-card{background:rgba(20,35,60,0.7);border:1px solid rgba(100,116,139,0.3);
+  border-radius:14px;padding:1rem 1.1rem;cursor:pointer;transition:all 0.2s;display:flex;align-items:flex-start;gap:0.75rem;}
+.style-card:hover{border-color:rgba(125,211,252,0.3);}
+.style-card.on{background:rgba(125,211,252,0.1);border-color:rgba(125,211,252,0.5);}
+.style-card input{position:absolute;opacity:0;width:0;height:0;}
+.style-card .si{font-size:1.5rem;flex-shrink:0;line-height:1;}
+.style-card .st{font-size:0.88rem;font-weight:700;color:#cbd5e1;line-height:1.2;}
+.style-card .sd{font-size:0.78rem;color:#64748b;margin-top:0.2rem;line-height:1.4;}
+.style-card.on .st{color:#7dd3fc;}
+.gen-btn{display:flex;align-items:center;justify-content:center;gap:0.75rem;width:100%;
+  padding:1.2rem 2rem;background:linear-gradient(135deg,#1e40af 0%,#6d28d9 50%,#0f766e 100%);
+  background-size:200% 200%;border:none;border-radius:18px;color:#fff;
+  font-family:'Orbitron',monospace;font-size:1.05rem;font-weight:700;letter-spacing:0.08em;
+  cursor:pointer;transition:all 0.3s;margin:1.5rem 0;animation:gradshift 6s ease infinite;}
+@keyframes gradshift{0%,100%{background-position:0% 50%;}50%{background-position:100% 50%;}}
+.gen-btn:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(109,40,217,0.4);}
+.gen-btn:active{transform:translateY(-1px);}
+.gen-btn-icon{font-size:1.4rem;}
+.result{display:none;margin-top:0.5rem;}
+.result.show{display:block;}
+.result-inner{background:rgba(2,15,28,0.95);border:1px solid rgba(52,211,153,0.35);
+  border-radius:22px;padding:2rem;position:relative;overflow:hidden;}
+.result-inner::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,#34d399,#7dd3fc,#a78bfa,#34d399);
+  background-size:200% 100%;animation:shimmer 3s linear infinite;}
+@keyframes shimmer{0%{background-position:0% 0%;}100%{background-position:200% 0%;}}
+.result-tag{font-family:'Orbitron',monospace;font-size:0.7rem;letter-spacing:0.2em;
+  color:#34d399;text-transform:uppercase;margin-bottom:1.25rem;display:flex;align-items:center;gap:0.5rem;}
+.result-tag::after{content:'';flex:1;height:1px;background:rgba(52,211,153,0.2);}
+.result-prompt{font-size:1.05rem;line-height:1.9;color:#e2e8f0;
+  border-left:3px solid #34d399;padding-left:1.1rem;margin-bottom:1.75rem;}
+.copy-row{display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center;}
+.copy-btn{display:inline-flex;align-items:center;gap:0.5rem;background:rgba(52,211,153,0.12);
+  border:1px solid rgba(52,211,153,0.35);border-radius:10px;color:#34d399;
+  font-family:'Nunito',sans-serif;font-size:0.92rem;font-weight:700;padding:0.6rem 1.2rem;cursor:pointer;transition:all 0.2s;}
+.copy-btn:hover{background:rgba(52,211,153,0.22);}
+.copy-btn.done{color:#6ee7b7;}
+.tips{background:rgba(125,211,252,0.05);border:1px solid rgba(125,211,252,0.15);
+  border-radius:14px;padding:1.1rem 1.25rem;margin-top:1.5rem;}
+.tips p{font-size:0.88rem;color:#64748b;line-height:1.7;}
+.tips strong{color:#7dd3fc;}
+.redo-hint{text-align:center;font-size:0.82rem;color:#334155;margin-top:1rem;}
+@keyframes spin{to{transform:rotate(360deg);}}
+/* ── PLANET TABS ── */
+.planet-tabs{display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,0.06);margin:0 0 0 0;}
+.planet-tab{padding:.65rem 1.4rem;font-size:.8rem;font-weight:700;font-family:'Nunito',sans-serif;
+  letter-spacing:.06em;text-transform:uppercase;cursor:pointer;border:none;background:none;
+  color:#334155;border-bottom:2px solid transparent;transition:all .2s;margin-bottom:-1px;}
+.planet-tab:hover{color:#64748b;}
+.planet-tab.active{color:#7dd3fc;border-bottom-color:#7dd3fc;}
+.planet-tab-pane{display:none;} .planet-tab-pane.active{display:flex;}
+.render-pane{align-items:center;justify-content:center;min-height:380px;padding:1.5rem;background:rgba(0,0,0,.3);}
+.render-img{max-width:100%;max-height:420px;border-radius:12px;object-fit:contain;}
+.render-loading{display:flex;flex-direction:column;align-items:center;gap:1rem;color:#334155;}
+.render-spinner{width:40px;height:40px;border-radius:50%;border:3px solid rgba(125,211,252,.15);border-top-color:#7dd3fc;animation:spin 1s linear infinite;}
+.quality-badge{font-size:.68rem;font-family:'Orbitron',monospace;letter-spacing:.12em;
+  text-transform:uppercase;padding:.28rem .8rem;border-radius:999px;margin-bottom:.5rem;display:inline-block;}
+.quality-blender{background:rgba(52,211,153,.1);color:#6ee7b7;border:1px solid rgba(52,211,153,.25);}
+.quality-browser{background:rgba(71,85,105,.1);color:#475569;border:1px solid rgba(71,85,105,.2);}
+
+.progress-bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,#7dd3fc,#a78bfa);z-index:100;transition:width 0.4s ease;width:0%;}
+
+/* ── MEDIA TYPE CARDS ── */
+.media-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;}
+.media-card{background:rgba(20,35,60,0.7);border:2px solid rgba(100,116,139,0.25);
+  border-radius:18px;padding:1.3rem 1.1rem;cursor:pointer;transition:all 0.2s;
+  display:flex;flex-direction:column;align-items:center;text-align:center;gap:0.55rem;}
+.media-card:hover{border-color:rgba(167,139,250,0.4);}
+.media-card.on{background:rgba(167,139,250,0.1);border-color:rgba(167,139,250,0.6);}
+.media-card input{position:absolute;opacity:0;width:0;height:0;}
+.media-card .mci{font-size:2.2rem;line-height:1;}
+.media-card .mct{font-size:0.92rem;font-weight:800;color:#cbd5e1;}
+.media-card .mcd{font-size:0.78rem;color:#64748b;line-height:1.45;}
+.media-card.on .mct{color:#d8b4fe;}
+.video-extra{display:none;margin-top:1rem;padding:1rem 1.1rem;
+  background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.18);border-radius:12px;}
+.video-extra.show{display:block;}
+.video-extra .qlabel{color:#d8b4fe !important;}
+.video-note{font-size:0.78rem;color:#64748b;margin-top:0.7rem;line-height:1.6;padding:0.7rem 0.9rem;
+  background:rgba(167,139,250,0.05);border-radius:8px;border-left:2px solid rgba(167,139,250,0.3);}
+.video-note strong{color:#a78bfa;}
+
+/* ── 3D PLANET SECTION ── */
+.planet-section{display:none;margin-top:2rem;opacity:0;transform:translateY(30px);transition:opacity 0.7s ease,transform 0.7s ease;}
+.planet-section.show{display:block;}
+.planet-section.visible{opacity:1;transform:translateY(0);}
+.planet-outer{background:rgba(4,10,26,0.97);border:1px solid rgba(125,211,252,0.18);border-radius:26px;overflow:hidden;position:relative;}
+.planet-outer::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,#a78bfa,#7dd3fc,#34d399,#a78bfa);
+  background-size:200% 100%;animation:shimmer 4s linear infinite;}
+.planet-header{padding:1.5rem 2rem 0.5rem;display:flex;align-items:center;gap:1rem;border-bottom:1px solid rgba(255,255,255,0.04);}
+.planet-header-icon{font-size:2rem;}
+.planet-header-text h2{font-family:'Orbitron',monospace;font-size:1.05rem;font-weight:900;
+  background:linear-gradient(120deg,#a78bfa,#7dd3fc);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.planet-header-text p{font-size:0.8rem;color:#334155;margin-top:0.15rem;}
+.planet-body{display:grid;grid-template-columns:1fr 1fr;min-height:400px;}
+@media(max-width:620px){.planet-body{grid-template-columns:1fr;}}
+.planet-canvas-col{position:relative;display:flex;align-items:center;justify-content:center;
+  background:transparent;min-height:340px;padding:1rem;}
+#planet-canvas-3d{display:block;cursor:grab;border-radius:12px;}
+#planet-canvas-3d:active{cursor:grabbing;}
+.drag-hint{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);
+  font-size:0.7rem;color:#1e3a5f;letter-spacing:0.14em;text-transform:uppercase;
+  display:flex;align-items:center;gap:0.5rem;pointer-events:none;white-space:nowrap;}
+.drag-hint::before,.drag-hint::after{content:'';width:18px;height:1px;background:#1e3a5f;}
+.planet-info-col{border-left:1px solid rgba(255,255,255,0.05);padding:1.75rem 1.75rem 1.75rem;
+  display:flex;flex-direction:column;gap:0;overflow-y:auto;}
+@media(max-width:620px){.planet-info-col{border-left:none;border-top:1px solid rgba(255,255,255,0.05);}}
+.planet-name-display{font-family:'Orbitron',monospace;font-size:1.45rem;font-weight:900;
+  color:#e2e8f0;letter-spacing:0.04em;line-height:1.1;margin-bottom:0.5rem;word-break:break-word;}
+.planet-badges{display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:1.4rem;}
+.badge{font-size:0.7rem;font-weight:700;padding:0.28rem 0.75rem;border-radius:999px;letter-spacing:0.04em;}
+.badge-type{background:rgba(167,139,250,0.14);color:#c4b5fd;border:1px solid rgba(167,139,250,0.28);}
+.badge-life-yes{background:rgba(52,211,153,0.11);color:#6ee7b7;border:1px solid rgba(52,211,153,0.28);}
+.badge-life-no{background:rgba(239,68,68,0.11);color:#fca5a5;border:1px solid rgba(239,68,68,0.28);}
+.badge-life-maybe{background:rgba(251,191,36,0.11);color:#fcd34d;border:1px solid rgba(251,191,36,0.28);}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin-bottom:1.4rem;}
+.stat-item{background:rgba(255,255,255,0.025);border-radius:11px;padding:0.7rem 0.75rem;}
+.stat-label{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:#334155;margin-bottom:0.22rem;}
+.stat-value{font-size:0.9rem;font-weight:700;color:#cbd5e1;line-height:1.2;}
+.features-title{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:#334155;margin-bottom:0.55rem;}
+.features-list{display:flex;flex-direction:column;gap:0.38rem;}
+.feature-item{display:flex;align-items:flex-start;gap:0.5rem;font-size:0.82rem;color:#64748b;line-height:1.45;}
+.feature-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:0.45rem;}
+.planet-footer{padding:0.9rem 2rem;border-top:1px solid rgba(255,255,255,0.04);}
+.planet-footer p{font-size:0.76rem;color:#1e3a5f;line-height:1.6;}
+.planet-footer strong{color:#334155;}
+</style>
+</head>
+<body>
+<div class="progress-bar" id="pbar"></div>
+<canvas id="bg"></canvas>
+<div class="wrap">
+
+<div class="hero">
+  <span class="hero-emoji">🪐</span>
+  <h1>Planet Prompt Builder</h1>
+  <p>Answer the questions below to design your very own alien planet. When you're done, you'll get a detailed AI image prompt — and a live 3D model of your world!</p>
+  <div class="steps-hint">✦ 10 sections ✦ Takes about 5–10 minutes</div>
+</div>
+
+<div class="card t-blue">
+  <div class="card-head"><div class="card-icon">🌍</div><div><div class="card-title">1 — Basic Planet Identity</div><div class="card-sub">Tell us the basics about your planet</div></div></div>
+  <div class="q"><label class="qlabel">What is your planet called?</label>
+    <input type="text" id="q-name" placeholder="e.g. Zorblax, Nebula Prime, Glacius..." list="dl-names">
+    <datalist id="dl-names"><option value="Zorblax"><option value="Nebula Prime"><option value="Igneus"><option value="Glacius"><option value="Aquaris"><option value="Terra Nova"><option value="Umbris"><option value="Pyraxis"></datalist></div>
+  <div class="q"><label class="qlabel">What type of planet is it?</label>
+    <select id="q-type"><option value="">Choose a type...</option>
+      <option value="rocky">🪨 Rocky</option><option value="watery / ocean">🌊 Watery / Ocean</option>
+      <option value="icy">🧊 Icy</option><option value="volcanic / lava">🌋 Volcanic / Lava</option>
+      <option value="desert / sandy">🏜️ Desert / Sandy</option><option value="forest / jungle">🌿 Forest / Jungle</option>
+      <option value="gas giant">💨 Gas Giant</option><option value="toxic / acid">☠️ Toxic / Acid</option>
+      <option value="crystal">💎 Crystal</option></select></div>
+  <div class="q"><label class="qlabel">Is your planet safe for life?</label>
+    <select id="q-life"><option value="">Choose an answer...</option>
+      <option value="habitable, capable of supporting alien life">✅ Yes — it has alien life</option>
+      <option value="too harsh and dangerous for any life">❌ No — too harsh for life</option>
+      <option value="potentially habitable with the right equipment">⚠️ Maybe — needs special equipment</option>
+      <option value="unknown — its secrets are yet to be discovered">❓ Unknown</option></select></div>
+</div>
+
+<div class="card t-rose">
+  <div class="card-head"><div class="card-icon">🎨</div><div><div class="card-title">2 — Colours &amp; Surface</div><div class="card-sub">What does the surface look like?</div></div></div>
+  <div class="q"><label class="qlabel">What is the main colour of your planet?</label>
+    <select id="q-main-colour"><option value="">Choose a colour...</option>
+      <option value="deep crimson red">🔴 Deep Crimson Red</option><option value="vivid orange">🟠 Vivid Orange</option>
+      <option value="golden yellow">🟡 Golden Yellow</option><option value="lush green">🟢 Lush Green</option>
+      <option value="ocean blue">🔵 Ocean Blue</option><option value="pale icy white">⬜ Pale Icy White</option>
+      <option value="dark ash grey">⬛ Dark Ash Grey</option><option value="sandy tan-brown">🟫 Sandy Tan-Brown</option>
+      <option value="vivid purple">🟣 Vivid Purple</option><option value="toxic neon green">💚 Toxic Neon Green</option>
+      <option value="midnight black">⚫ Midnight Black</option></select></div>
+  <div class="q"><label class="qlabel">What other colours can be seen on the surface?</label>
+    <input type="text" id="q-other-colours" placeholder="e.g. glowing green cracks, dark brown rock..." list="dl-colours">
+    <datalist id="dl-colours"><option value="glowing green rivers and cracks"><option value="bright orange lava flows"><option value="icy white polar caps"><option value="dark brown exposed rock"><option value="deep blue frozen oceans"><option value="purple sulphur deposits"></datalist></div>
+  <div class="q"><label class="qlabel">What covers most of the surface? (pick all that apply)</label>
+    <div class="pill-grid" id="pg-surface">
+      <label class="pill"><input type="checkbox" value="lava flows"><span class="dot"></span>🌋 Lava flows</label>
+      <label class="pill"><input type="checkbox" value="deep oceans"><span class="dot"></span>🌊 Deep oceans</label>
+      <label class="pill"><input type="checkbox" value="thick ice sheets"><span class="dot"></span>🧊 Ice sheets</label>
+      <label class="pill"><input type="checkbox" value="vast deserts"><span class="dot"></span>🏜️ Deserts</label>
+      <label class="pill"><input type="checkbox" value="dense forests"><span class="dot"></span>🌲 Dense forests</label>
+      <label class="pill"><input type="checkbox" value="bare jagged rock"><span class="dot"></span>🪨 Bare rock</label>
+      <label class="pill"><input type="checkbox" value="giant crystal formations"><span class="dot"></span>💎 Crystals</label>
+      <label class="pill"><input type="checkbox" value="alien vegetation"><span class="dot"></span>👾 Alien plants</label>
+      <label class="pill"><input type="checkbox" value="pools of toxic liquid"><span class="dot"></span>☠️ Toxic pools</label>
+    </div></div>
+</div>
+
+<div class="card t-orange">
+  <div class="card-head"><div class="card-icon">🌋</div><div><div class="card-title">3 — Land Features</div><div class="card-sub">What shapes the surface?</div></div></div>
+  <div class="q"><label class="qlabel">What features can be seen on the land? (pick all that apply)</label>
+    <div class="pill-grid" id="pg-terrain">
+      <label class="pill"><input type="checkbox" value="towering active volcanoes"><span class="dot"></span>🌋 Volcanoes</label>
+      <label class="pill"><input type="checkbox" value="vast mountain ranges"><span class="dot"></span>⛰️ Mountains</label>
+      <label class="pill"><input type="checkbox" value="wide open oceans"><span class="dot"></span>🌊 Oceans</label>
+      <label class="pill"><input type="checkbox" value="huge impact craters"><span class="dot"></span>☄️ Craters</label>
+      <label class="pill"><input type="checkbox" value="deep winding canyons"><span class="dot"></span>🏔️ Canyons</label>
+      <label class="pill"><input type="checkbox" value="massive glaciers"><span class="dot"></span>🧊 Glaciers</label>
+      <label class="pill"><input type="checkbox" value="winding rivers"><span class="dot"></span>〰️ Rivers</label>
+    </div></div>
+  <div class="q"><label class="qlabel">Are there any extreme features? (pick all that apply)</label>
+    <div class="pill-grid" id="pg-extreme">
+      <label class="pill"><input type="checkbox" value="a massive permanent storm system"><span class="dot"></span>🌪️ Giant storm</label>
+      <label class="pill"><input type="checkbox" value="glowing land masses visible from space"><span class="dot"></span>✨ Glowing land</label>
+      <label class="pill"><input type="checkbox" value="floating islands drifting in the sky"><span class="dot"></span>🏝️ Floating islands</label>
+      <label class="pill"><input type="checkbox" value="enormous planetary rings"><span class="dot"></span>💫 Planetary rings</label>
+      <label class="pill"><input type="checkbox" value="massive erupting geysers"><span class="dot"></span>💨 Geysers</label>
+    </div></div>
+</div>
+
+<div class="card t-purple">
+  <div class="card-head"><div class="card-icon">✨</div><div><div class="card-title">4 — Special &amp; Unique Features</div><div class="card-sub">The wow factor that makes your planet extraordinary</div></div></div>
+  <div class="q"><label class="qlabel">Does your planet have anything magical or unusual?</label>
+    <input type="text" id="q-special" placeholder="e.g. glowing rivers, crystal forests, alien ruins..." list="dl-special">
+    <datalist id="dl-special">
+      <option value="rivers that glow with bright light"><option value="vast forests of giant glowing crystals">
+      <option value="rocks that float and orbit above the surface"><option value="ancient alien ruins half-buried in the surface">
+      <option value="alien cities built into cliffsides"><option value="giant mushroom-like forests">
+      <option value="waterfalls cascading off floating islands"><option value="a giant glowing eye-like structure at the north pole">
+    </datalist></div>
+  <div class="q"><label class="qlabel">What colour are these special features?</label>
+    <input type="text" id="q-special-colour" placeholder="e.g. bright cyan, electric blue, golden..." list="dl-scol">
+    <datalist id="dl-scol"><option value="bright cyan"><option value="electric blue"><option value="glowing lime green"><option value="golden yellow"><option value="vivid purple"><option value="hot pink"><option value="deep red"><option value="shimmering silver"></datalist></div>
+</div>
+
+<div class="card t-teal">
+  <div class="card-head"><div class="card-icon">☁️</div><div><div class="card-title">5 — Atmosphere</div><div class="card-sub">What fills the sky above the surface?</div></div></div>
+  <div class="q"><label class="qlabel">What do the clouds look like?</label>
+    <select id="q-clouds"><option value="">Choose an option...</option>
+      <option value="thick heavy cloud cover wrapping the planet">⛅ Thick and heavy</option>
+      <option value="thin wispy high-altitude clouds">🌤️ Thin and wispy</option>
+      <option value="dramatic swirling storm clouds">🌩️ Dramatic storm clouds</option>
+      <option value="strange colourful alien clouds in unusual hues">🌈 Strange colourful clouds</option>
+      <option value="no cloud cover at all">☀️ No clouds — clear surface visible</option></select></div>
+  <div class="q"><label class="qlabel">Is there fog, smoke, mist, or anything else?</label>
+    <div class="pill-grid" id="pg-atmo">
+      <label class="pill"><input type="checkbox" value="volcanic ash and smoke rising from eruptions"><span class="dot"></span>🌫️ Volcanic smoke</label>
+      <label class="pill"><input type="checkbox" value="thick ground-level fog"><span class="dot"></span>🌁 Thick fog</label>
+      <label class="pill"><input type="checkbox" value="a shimmering aurora of light curtains in the upper atmosphere"><span class="dot"></span>🌌 Aurora</label>
+      <label class="pill"><input type="checkbox" value="a coloured atmospheric haze"><span class="dot"></span>🎆 Coloured haze</label>
+      <label class="pill"><input type="checkbox" value="none"><span class="dot"></span>❌ None</label>
+    </div></div>
+</div>
+
+<div class="card t-indigo">
+  <div class="card-head"><div class="card-icon">🌌</div><div><div class="card-title">6 — Space Setting</div><div class="card-sub">What is the space around your planet like?</div></div></div>
+  <div class="q"><label class="qlabel">What does the space behind your planet look like?</label>
+    <select id="q-space"><option value="">Choose an option...</option>
+      <option value="against a deep black sky filled with thousands of stars">⭐ Deep black with stars</option>
+      <option value="against a vivid swirling colourful nebula">🌈 Vivid colourful nebula</option>
+      <option value="near a bright spiral galaxy in the background">🌀 Near a bright galaxy</option>
+      <option value="in a dusty region of space with faint distant stars">🌫️ Dusty and dim</option>
+      <option value="within a dense sparkling star cluster">✨ Dense star cluster</option></select></div>
+  <div class="q"><label class="qlabel">Are there other planets or moons nearby?</label>
+    <select id="q-moons"><option value="">Choose an option...</option>
+      <option value="with one large cratered moon visible close by">🌕 One large moon</option>
+      <option value="with two smaller moons orbiting nearby">🌑🌑 Two smaller moons</option>
+      <option value="with a distant neighbouring planet faintly visible">🪐 A distant planet</option>
+      <option value="with several moons and a distant ringed planet visible">🌕🌕🪐 Several moons + a planet</option>
+      <option value="completely alone in space">🔲 Alone in space</option></select></div>
+</div>
+
+<div class="card t-amber">
+  <div class="card-head"><div class="card-icon">💡</div><div><div class="card-title">7 — Lighting</div><div class="card-sub">How is your planet lit?</div></div></div>
+  <div class="q"><label class="qlabel">How bright is your planet?</label>
+    <select id="q-light"><option value="">Choose an option...</option>
+      <option value="brightly and evenly lit across most of its surface">☀️ Brightly lit</option>
+      <option value="dramatically lit — one side fully illuminated, the other in deep shadow">🌓 Half lit, half in shadow</option>
+      <option value="dimly lit with very little sunlight reaching it">🌑 Dimly lit</option>
+      <option value="glowing from within as if it has an inner source of light">💫 Glowing from within</option></select></div>
+  <div class="q"><label class="qlabel">Does any part of your planet glow?</label>
+    <select id="q-glow"><option value="">No special glow</option>
+      <option value="The surface glows in places — especially the cracks, rivers and fault lines.">✨ Yes — the cracks and rivers glow</option>
+      <option value="The planet has a faint luminous glow around its edges, visible from space.">🌟 Yes — a glow around the edges</option>
+      <option value="The upper atmosphere shimmers and glows like a giant aurora.">💫 Yes — the atmosphere glows</option></select></div>
+</div>
+
+<div class="card" style="background:rgba(10,28,30,0.9);border-color:rgba(52,211,153,0.12);">
+  <div class="card-head">
+    <div class="card-icon" style="background:rgba(52,211,153,0.15);">🌱</div>
+    <div><div class="card-title" style="color:#6ee7b7;">8 — Life &amp; Habitability</div>
+    <div class="card-sub">What kind of life — if any — exists on this world?</div></div>
+  </div>
+
+  <div class="q"><label class="qlabel">What makes this planet able to support life? (pick all that apply)</label>
+    <div class="pill-grid" id="pg-hab">
+      <label class="pill"><input type="checkbox" value="liquid water oceans and rivers"><span class="dot"></span>💧 Liquid water</label>
+      <label class="pill"><input type="checkbox" value="a thick breathable atmosphere"><span class="dot"></span>🌬️ Breathable atmosphere</label>
+      <label class="pill"><input type="checkbox" value="a stable distance from its star — not too hot and not too cold"><span class="dot"></span>☀️ Goldilocks zone</label>
+      <label class="pill"><input type="checkbox" value="underground volcanic heat keeping the surface warm"><span class="dot"></span>🌋 Volcanic heat</label>
+      <label class="pill"><input type="checkbox" value="a strong magnetic field shielding the surface from deadly radiation"><span class="dot"></span>🛡️ Magnetic field</label>
+      <label class="pill"><input type="checkbox" value="strange alien chemistry that allows a completely different kind of life"><span class="dot"></span>🧬 Alien chemistry</label>
+      <label class="pill"><input type="checkbox" value="none — this planet cannot support life"><span class="dot"></span>☠️ Not habitable</label>
+    </div>
+  </div>
+
+  <div class="q"><label class="qlabel">What type of life exists here?</label>
+    <div class="life-grid" id="lg-lifetype">
+      <label class="life-card"><input type="radio" name="life-type" value="none">
+        <span class="lci">☠️</span><div><div class="lct">No life</div><div class="lcd">Completely barren — no organisms of any kind</div></div></label>
+      <label class="life-card"><input type="radio" name="life-type" value="microscopic">
+        <span class="lci">🦠</span><div><div class="lct">Microscopic only</div><div class="lcd">Bacteria, algae and tiny organisms — invisible to the eye</div></div></label>
+      <label class="life-card"><input type="radio" name="life-type" value="plant-like">
+        <span class="lci">🌿</span><div><div class="lct">Plant-like life</div><div class="lcd">Vegetation covers the surface but no animals</div></div></label>
+      <label class="life-card"><input type="radio" name="life-type" value="simple-animals">
+        <span class="lci">🐛</span><div><div class="lct">Simple creatures</div><div class="lcd">Insects, fish and small simple animals</div></div></label>
+      <label class="life-card"><input type="radio" name="life-type" value="complex-animals">
+        <span class="lci">🦁</span><div><div class="lct">Large complex animals</div><div class="lcd">A rich ecosystem of varied and large creatures</div></div></label>
+      <label class="life-card"><input type="radio" name="life-type" value="intelligent">
+        <span class="lci">👽</span><div><div class="lct">Intelligent beings</div><div class="lcd">Beings with language, culture and civilisation</div></div></label>
+    </div>
+  </div>
+
+  <div class="civ-reveal" id="civ-reveal">
+    <div class="q"><label class="qlabel" style="color:#7dd3fc;">How advanced is their civilisation?</label>
+      <div class="civ-grid" id="cg-civ">
+        <label class="civ-card"><input type="radio" name="civ-level" value="primitive">
+          <span class="cci">🪨</span><div><div class="cct">Primitive / tribal</div><div class="ccd">Stone tools, fire, basic shelters</div></div></label>
+        <label class="civ-card"><input type="radio" name="civ-level" value="ancient">
+          <span class="cci">🏛️</span><div><div class="cct">Ancient / medieval</div><div class="ccd">Cities, farms, simple technology</div></div></label>
+        <label class="civ-card"><input type="radio" name="civ-level" value="industrial">
+          <span class="cci">🏭</span><div><div class="cct">Industrial age</div><div class="ccd">Factories, steam power, early cities</div></div></label>
+        <label class="civ-card"><input type="radio" name="civ-level" value="modern">
+          <span class="cci">💻</span><div><div class="cct">Modern technology</div><div class="ccd">Similar to Earth today</div></div></label>
+        <label class="civ-card"><input type="radio" name="civ-level" value="advanced">
+          <span class="cci">🚀</span><div><div class="cct">Advanced / space-faring</div><div class="ccd">Spacecraft, energy tech, megastructures</div></div></label>
+        <label class="civ-card"><input type="radio" name="civ-level" value="unknown">
+          <span class="cci">❓</span><div><div class="cct">Unknown / mysterious</div><div class="ccd">Signs of civilisation but origin unknown</div></div></label>
+      </div>
+    </div>
+  </div>
+
+  <div class="q" style="margin-top:1rem;"><label class="qlabel">Describe the creatures or beings (optional)</label>
+    <input type="text" id="q-creatures" placeholder="e.g. tall blue-skinned humanoids, six-legged reptiles, bioluminescent jellyfish..." list="dl-creatures">
+    <datalist id="dl-creatures">
+      <option value="tall blue-skinned humanoids with large dark eyes">
+      <option value="six-legged reptilian creatures with iridescent scales">
+      <option value="bioluminescent floating jellyfish-like beings">
+      <option value="small insect-like creatures that travel in vast swarms">
+      <option value="giant plant-like beings that move slowly across the surface">
+      <option value="crystalline silicon-based life forms that communicate with light">
+      <option value="aquatic tentacled beings that have built cities beneath the waves">
+      <option value="tiny furry mammal-like creatures living in underground warrens">
+    </datalist>
+  </div>
+
+  <div class="q"><label class="qlabel">How do they get their energy / what do they eat? (pick all that apply)</label>
+    <div class="pill-grid" id="pg-diet">
+      <label class="pill"><input type="checkbox" value="plants and vegetation"><span class="dot"></span>🌿 Plants</label>
+      <label class="pill"><input type="checkbox" value="hunting other animals"><span class="dot"></span>🥩 Other animals</label>
+      <label class="pill"><input type="checkbox" value="absorbing sunlight like plants"><span class="dot"></span>☀️ Sunlight</label>
+      <label class="pill"><input type="checkbox" value="fungi and decomposing matter"><span class="dot"></span>🍄 Fungi / decay</label>
+      <label class="pill"><input type="checkbox" value="strange alien minerals from the ground"><span class="dot"></span>💎 Alien minerals</label>
+      <label class="pill"><input type="checkbox" value="chemical energy from volcanic vents"><span class="dot"></span>🌋 Volcanic energy</label>
+    </div>
+  </div>
+</div>
+
+<div class="card t-purple">
+  <div class="card-head"><div class="card-icon">📸</div><div><div class="card-title">9 — Camera View</div><div class="card-sub">Where will the viewer be standing?</div></div></div>
+  <div class="q"><label class="qlabel">What kind of image do you want?</label>
+    <div class="view-grid">
+      <label class="view-card" id="vc-space"><input type="radio" name="cam-view" value="space">
+        <span class="vi">🌍</span><div class="vt">View from Space</div>
+        <div class="vd">See your whole planet floating in space — like a photo taken from a spacecraft</div></label>
+      <label class="view-card surface-pick" id="vc-surface"><input type="radio" name="cam-view" value="surface">
+        <span class="vi">🏔️</span><div class="vt">View from the Surface</div>
+        <div class="vd">Stand on the planet and look at a specific feature — rivers, buildings, volcanoes and more</div></label>
+    </div>
+    <div class="surface-extra" id="surface-extra">
+      <label class="qlabel">Which feature do you want the image to show up close?</label>
+      <input type="text" id="q-focus-feature" placeholder="e.g. glowing rivers, alien city, volcanic eruption..." list="dl-focus">
+      <datalist id="dl-focus">
+        <option value="glowing rivers winding through the landscape"><option value="an ancient alien city built into cliff faces">
+        <option value="an erupting volcano with lava flows"><option value="a towering crystal forest">
+        <option value="a vast ocean coastline with crashing waves"><option value="giant floating rocks drifting overhead">
+        <option value="ancient ruins half-buried in the ground"><option value="a dramatic mountain range under stormy skies">
+      </datalist>
+    </div></div>
+
+  <div class="q" style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid rgba(255,255,255,0.05);">
+    <label class="qlabel">Will this be an image or a video?</label>
+    <div class="media-grid">
+      <label class="media-card on" id="mc-image">
+        <input type="radio" name="media-type" value="image" checked>
+        <span class="mci">🖼️</span>
+        <div class="mct">Still Image</div>
+        <div class="mcd">A single detailed image — use in Adobe Firefly, Canva AI or Copilot</div>
+      </label>
+      <label class="media-card" id="mc-video">
+        <input type="radio" name="media-type" value="video">
+        <span class="mci">🎬</span>
+        <div class="mct">Video Clip</div>
+        <div class="mcd">A short animated video clip with camera movement instructions</div>
+      </label>
+    </div>
+    <div class="video-extra" id="video-extra">
+
+      <div class="video-note">
+        📌 <strong>Video prompt:</strong> This prompt includes specific camera movement instructions. Copy and paste it into your AI video generator.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card t-green">
+  <div class="card-head"><div class="card-icon">🎥</div><div><div class="card-title">10 — Style</div><div class="card-sub">What should the final image look like?</div></div></div>
+  <div class="q"><label class="qlabel">Choose a style for your image:</label>
+    <div class="style-grid" id="sg-style">
+      <label class="style-card"><input type="radio" name="art-style" value="Ultra-realistic, photorealistic, NASA-style space photography"><span class="si">📷</span><div><div class="st">Realistic photo</div><div class="sd">Like a real space photo</div></div></label>
+      <label class="style-card"><input type="radio" name="art-style" value="Epic sci-fi concept art, cinematic and dramatic, highly detailed"><span class="si">🚀</span><div><div class="st">Sci-fi concept art</div><div class="sd">Dramatic and cinematic</div></div></label>
+      <label class="style-card"><input type="radio" name="art-style" value="Digital fantasy painting, rich colours, painterly brush strokes"><span class="si">🖌️</span><div><div class="st">Fantasy painting</div><div class="sd">Rich, painterly style</div></div></label>
+      <label class="style-card"><input type="radio" name="art-style" value="Vibrant cartoon illustration, bold outlines and bright colours"><span class="si">🎨</span><div><div class="st">Cartoon</div><div class="sd">Fun and colourful</div></div></label>
+      <label class="style-card"><input type="radio" name="art-style" value="Detailed 3D CGI render, highly polished and photorealistic"><span class="si">💎</span><div><div class="st">3D CGI render</div><div class="sd">Glossy and detailed</div></div></label>
+      <label class="style-card"><input type="radio" name="art-style" value="Soft dreamlike watercolour painting, gentle and artistic"><span class="si">🌊</span><div><div class="st">Watercolour</div><div class="sd">Soft and dreamy</div></div></label>
+    </div></div>
+</div>
+
+<button class="gen-btn" onclick="generate()">
+  <span class="gen-btn-icon">🚀</span>Build My Planet Prompt!
+</button>
+
+<div class="result" id="result">
+  <div class="result-inner">
+    <div class="result-tag" id="result-tag">✦ Your Image Generation Prompt</div>
+    <div class="result-prompt" id="result-prompt"></div>
+    <div class="copy-row">
+      <button class="copy-btn" id="copy-btn" onclick="copyIt()">📋 Copy Prompt</button>
+      <span style="font-size:0.82rem;color:#475569;">Paste this into your AI image generator</span>
+    </div>
+    <div class="tips" id="prompt-tips"><p id="tips-text">📌 <strong>Where to use this:</strong> Copy and paste into <strong>Adobe Firefly</strong>, <strong>Microsoft Copilot Designer</strong>, or <strong>Canva AI</strong>.</p></div>
+  </div>
+  <div class="redo-hint">Want to change something? Scroll back up, update your answers, and click the button again.</div>
+</div>
+
+<div class="planet-section" id="planet-section">
+  <div class="planet-outer">
+    <div class="planet-header">
+      <div class="planet-header-icon">🪐</div>
+      <div class="planet-header-text">
+        <h2>Your Planet in 3D</h2>
+        <p>A live interactive model built from your answers — drag to spin it around</p>
+      </div>
+    </div>
+    <div class="planet-tabs" id="planet-tabs">
+      <button class="planet-tab active" onclick="switchTab('view3d')">🌍 3D Model</button>
+      <button class="planet-tab" onclick="switchTab('render')" id="render-tab">🎨 Cinematic Render</button>
+    </div>
+    <div class="planet-body">
+      <div class="planet-tab-pane active" id="pane-view3d" style="flex:1;display:flex;">
+        <div class="planet-canvas-col" style="flex:1;">
+          <canvas id="planet-canvas-3d"></canvas>
+          <div class="drag-hint">drag to rotate</div>
+        </div>
+        <div class="planet-info-col" id="planet-info-col"></div>
+      </div>
+      <div class="planet-tab-pane" id="pane-render" style="flex:1;">
+        <div class="render-pane" id="render-pane" style="flex:1;">
+          <div class="render-loading" id="render-loading">
+            <div class="render-spinner"></div>
+            <span style="font-size:.78rem;letter-spacing:.1em;">GENERATING WITH BLENDER...</span>
+          </div>
+          <img id="render-img" class="render-img" style="display:none;" alt="Planet render">
+        </div>
+        <div class="planet-info-col" id="planet-info-col-render" style="min-width:280px;"></div>
+      </div>
+    </div>
+    <div class="planet-footer">
+      <p>⚠️ <strong>Note:</strong> This 3D preview is a simplified interpretation of your planet. The AI-generated image from your prompt above will look far more detailed and dramatic!</p>
+    </div>
+  </div>
+</div>
+
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script>
+/* ── BACKGROUND STARS ── */
+const bgC=document.getElementById('bg'),bgX=bgC.getContext('2d');
+let bW,bH,bS=[];
+function bgR(){bW=bgC.width=innerWidth;bH=bgC.height=innerHeight;}
+bgR();addEventListener('resize',bgR);
+for(let i=0;i<350;i++)bS.push({x:Math.random(),y:Math.random(),r:.2+Math.random()*1.6,o:Math.random(),d:(Math.random()-.5)*.008});
+(function bF(){bgX.clearRect(0,0,bW,bH);bS.forEach(p=>{p.o=Math.max(.1,Math.min(.95,p.o+p.d));if(p.o<=.1||p.o>=.95)p.d*=-1;bgX.beginPath();bgX.arc(p.x*bW,p.y*bH,p.r,0,Math.PI*2);bgX.fillStyle=`rgba(255,255,255,${p.o})`;bgX.fill();});requestAnimationFrame(bF);})();
+
+/* ── PROGRESS ── */
+function uProg(){const f=['q-name','q-type','q-main-colour','q-space','q-light'];let n=f.filter(id=>{const e=document.getElementById(id);return e&&e.value;}).length;const s=document.querySelector('input[name="art-style"]:checked')?1:0;document.getElementById('pbar').style.width=Math.round((n+s)/(f.length+1)*100)+'%';}
+document.querySelectorAll('select,input').forEach(el=>el.addEventListener('change',uProg));
+document.querySelectorAll('input[type=text]').forEach(el=>el.addEventListener('input',uProg));
+
+/* ── PILL TOGGLES ── */
+document.querySelectorAll('.pill').forEach(p=>{const i=p.querySelector('input');p.addEventListener('click',()=>{i.checked=!i.checked;p.classList.toggle('on',i.checked);});});
+
+/* ── CARD TOGGLES ── */
+document.querySelectorAll('.style-card').forEach(c=>{const i=c.querySelector('input');c.addEventListener('click',()=>{document.querySelectorAll('.style-card').forEach(x=>x.classList.remove('on'));i.checked=true;c.classList.add('on');});});
+document.querySelectorAll('.view-card').forEach(c=>{const i=c.querySelector('input');c.addEventListener('click',()=>{document.querySelectorAll('.view-card').forEach(x=>x.classList.remove('on'));i.checked=true;c.classList.add('on');document.getElementById('surface-extra').classList.toggle('show',i.value==='surface');});});
+document.querySelectorAll('.life-card').forEach(c=>{const i=c.querySelector('input');c.addEventListener('click',()=>{document.querySelectorAll('.life-card').forEach(x=>x.classList.remove('on'));i.checked=true;c.classList.add('on');document.getElementById('civ-reveal').classList.toggle('show',i.value==='intelligent');});});
+document.querySelectorAll('.civ-card').forEach(c=>{const i=c.querySelector('input');c.addEventListener('click',()=>{document.querySelectorAll('.civ-card').forEach(x=>x.classList.remove('on'));i.checked=true;c.classList.add('on');});});
+document.querySelectorAll('.media-card').forEach(c=>{const i=c.querySelector('input');c.addEventListener('click',()=>{document.querySelectorAll('.media-card').forEach(x=>x.classList.remove('on'));i.checked=true;c.classList.add('on');document.getElementById('video-extra').classList.toggle('show',i.value==='video');});});
+
+/* ── HELPERS ── */
+function gC(id){return[...document.querySelectorAll('#'+id+' input:checked')].map(i=>i.value).filter(v=>v!=='none');}
+function jL(a){if(!a.length)return'';if(a.length===1)return a[0];return a.slice(0,-1).join(', ')+', and '+a[a.length-1];}
+function mRng(seed){let s=Math.abs(Math.sin(seed+1)*43758.5453)|0;return()=>{s=(s*1664525+1013904223)&0xffffffff;return(s>>>0)/4294967296;};}
+
+/* ── COLOUR MAPS ── */
+const MC={'deep crimson red':[160,30,30],'vivid orange':[220,95,20],'golden yellow':[200,175,40],'lush green':[40,130,50],'ocean blue':[30,90,180],'pale icy white':[210,225,240],'dark ash grey':[70,75,80],'sandy tan-brown':[185,155,90],'vivid purple':[110,40,180],'toxic neon green':[60,200,55],'midnight black':[25,25,35]};
+const SC={'bright cyan':[0,230,230],'electric blue':[40,110,255],'glowing lime green':[100,255,60],'golden yellow':[255,205,0],'vivid purple':[190,55,255],'hot pink':[255,60,155],'deep red':[210,20,20],'shimmering silver':[195,205,215]};
+const TT={'rocky':{a:[.4,.55,1]},'watery / ocean':{a:[.2,.5,1]},'icy':{a:[.65,.82,1]},'volcanic / lava':{a:[1,.32,.08]},'desert / sandy':{a:[.85,.65,.35]},'forest / jungle':{a:[.35,.72,.42]},'gas giant':{a:[.62,.5,.85]},'toxic / acid':{a:[.42,.82,.2]},'crystal':{a:[.62,.42,1]}};
+function gT(type){return TT[type]||TT['rocky'];}
+function fSC(str){if(!str)return null;const s=str.toLowerCase();if(s.includes('cyan')||s.includes('teal'))return[0,220,220];if(s.includes('blue'))return[40,110,255];if(s.includes('green'))return[100,255,60];if(s.includes('gold')||s.includes('yellow'))return[255,205,0];if(s.includes('purple')||s.includes('violet'))return[190,55,255];if(s.includes('pink'))return[255,60,155];if(s.includes('red'))return[230,40,40];if(s.includes('orange'))return[255,130,0];if(s.includes('silver')||s.includes('white'))return[200,210,220];return[180,180,255];}
+
+/* ── PROCEDURAL NOISE ── */
+function _h(x,y,s){
+  let n=(Math.imul(x+s*7,374761393)^Math.imul(y+s*3,1274126177))|0;
+  n=Math.imul(n^(n>>>15),2246822519)|0;
+  n=Math.imul(n^(n>>>13),3266489917)|0;
+  return((n^(n>>>16))>>>0)/4294967296;
+}
+function _sm(t){return t*t*(3-2*t);}
+function _vn(x,y,s){
+  const ix=Math.floor(x)|0,iy=Math.floor(y)|0,fx=_sm(x-ix),fy=_sm(y-iy);
+  const a=_h(ix,iy,s),b=_h(ix+1,iy,s),c=_h(ix,iy+1,s),d=_h(ix+1,iy+1,s);
+  return a+fx*(b-a)+fy*(c-a+fx*(a-b-c+d));
+}
+function _fbm(x,y,s,oct){
+  let v=0,amp=0.5,f=1,m=0;
+  for(let i=0;i<oct;i++){v+=_vn(x*f,y*f,s+i*997)*amp;m+=amp;amp*=0.5;f*=2.1;}
+  return v/m;
+}
+// Triplanar — samples 3 faces of the sphere for seamless wrapping
+function _tri(nx,ny,nz,scale,seed,oct){
+  const ax=Math.abs(nx),ay=Math.abs(ny),az=Math.abs(nz);
+  let wx=ax*ax*ax,wy=ay*ay*ay,wz=az*az*az;
+  const ws=wx+wy+wz+1e-6;wx/=ws;wy/=ws;wz/=ws;
+  return _fbm(ny*scale,nz*scale,seed,oct)*wx+
+         _fbm(nx*scale,nz*scale,seed+1000,oct)*wy+
+         _fbm(nx*scale,ny*scale,seed+2000,oct)*wz;
+}
+
+/* ── TERRAIN COLOUR RAMPS ── */
+function _lc(a,b,t){return[a[0]+t*(b[0]-a[0]),a[1]+t*(b[1]-a[1]),a[2]+t*(b[2]-a[2])];}
+function _ramp(stops,h){
+  for(let i=0;i<stops.length-1;i++){
+    if(h<=stops[i+1][0]){
+      const t=(h-stops[i][0])/(stops[i+1][0]-stops[i][0]);
+      return _lc(stops[i][1],stops[i+1][1],Math.max(0,Math.min(1,t)));
+    }
+  }
+  return stops[stops.length-1][1];
+}
+const RAMPS={
+  'rocky':[[0,[28,18,12]],[.18,[65,45,30]],[.38,[95,70,48]],[.55,[120,90,62]],[.70,[145,115,82]],[.83,[175,148,118]],[.92,[205,190,170]],[1,[238,228,218]]],
+  'watery / ocean':[[0,[8,22,88]],[.20,[14,42,136]],[.36,[22,62,158]],[.44,[32,85,165]],[.49,[195,178,105]],[.54,[80,135,58]],[.68,[55,108,42]],[.80,[70,82,60]],[.90,[120,118,112]],[1,[242,242,255]]],
+  'icy':[[0,[28,58,138]],[.22,[58,105,195]],[.40,[128,168,218]],[.58,[185,210,232]],[.75,[215,230,245]],[.88,[232,242,252]],[1,[248,252,255]]],
+  'volcanic / lava':[[0,[255,160,0]],[.08,[240,80,0]],[.18,[180,40,0]],[.32,[100,28,8]],[.48,[52,22,12]],[.62,[38,18,10]],[.75,[48,40,32]],[.88,[65,58,52]],[1,[82,72,68]]],
+  'desert / sandy':[[0,[55,28,8]],[.18,[105,62,22]],[.35,[162,105,45]],[.52,[205,158,72]],[.68,[222,178,98]],[.82,[200,155,88]],[.92,[165,118,72]],[1,[138,95,58]]],
+  'forest / jungle':[[0,[14,45,25]],[.22,[18,72,32]],[.42,[24,100,40]],[.60,[30,118,48]],[.74,[35,100,42]],[.84,[42,72,38]],[.92,[62,72,58]],[1,[205,215,210]]],
+  'gas giant':[[0,[188,148,118]],[.15,[165,128,148]],[.30,[148,128,175]],[.45,[162,145,162]],[.60,[175,162,145]],[.75,[188,172,138]],[.88,[200,188,165]],[1,[218,210,200]]],
+  'toxic / acid':[[0,[28,88,12]],[.20,[38,118,18]],[.38,[48,148,22]],[.55,[60,162,28]],[.70,[42,128,20]],[.82,[32,98,15]],[.92,[28,78,12]],[1,[55,88,32]]],
+  'crystal':[[0,[38,18,115]],[.18,[58,32,158]],[.35,[88,55,198]],[.52,[118,82,225]],[.68,[148,115,238]],[.82,[188,158,252]],[.92,[218,200,255]],[1,[245,238,255]]],
+};
+function getTerrainColor(type,h,mainCol){
+  const ramp=RAMPS[type]||RAMPS['rocky'];
+  const base=_ramp(ramp,h);
+  if(mainCol){
+    const mc=MC[mainCol];
+    if(mc){
+      // Blend main colour into mid-range terrain (heights 0.3-0.8)
+      const blend=Math.max(0,Math.min(1,1-Math.abs(h-0.55)/0.45))*0.38;
+      return[base[0]*(1-blend)+mc[0]*blend,base[1]*(1-blend)+mc[1]*blend,base[2]*(1-blend)+mc[2]*blend];
+    }
+  }
+  return base;
+}
+// Specular intensity: how shiny is this height level?
+function getSpecular(type,h){
+  if(type==='watery / ocean') return h<0.45?0.85:h<0.50?0.3:0.04;
+  if(type==='icy') return 0.5+h*0.4;
+  if(type==='volcanic / lava') return h<0.2?0.6:0.05;
+  if(type==='crystal') return 0.3+h*0.5;
+  if(type==='toxic / acid') return h<0.3?0.45:0.06;
+  return 0.04;
+}
+
+/* ── GLSL FALLBACK SHADERS (used when Flask server is not available) ── */
+const PLANET_VERT=`
+varying vec3 vPos;varying vec3 vNorm;
+void main(){vPos=position;vNorm=normalize(normalMatrix*normal);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`;
+const PLANET_FRAG=`
+precision highp float;
+uniform sampler2D uPal;uniform sampler2D uSpec;uniform vec3 uSun;uniform vec3 uSpecCol;
+uniform float uSpecStr;uniform float uSeed;uniform float uPolar;uniform float uGas;
+uniform float uGlow;uniform vec3 uGlowCol;
+varying vec3 vPos;varying vec3 vNorm;
+float h21(vec2 p){p=fract(p*vec2(127.1,311.7));p+=dot(p,p+19.19);return fract(p.x*p.y);}
+float vn(vec2 p){vec2 i=floor(p),f=fract(p),u=f*f*(3.0-2.0*f);return mix(mix(h21(i),h21(i+vec2(1,0)),u.x),mix(h21(i+vec2(0,1)),h21(i+vec2(1,1)),u.x),u.y);}
+float fbm(vec2 p){float v=0.0,a=0.5;mat2 m=mat2(1.6,1.2,-1.2,1.6);v+=a*vn(p);p=m*p;a*=0.5;v+=a*vn(p);p=m*p;a*=0.5;v+=a*vn(p);p=m*p;a*=0.5;v+=a*vn(p);p=m*p;a*=0.5;v+=a*vn(p);p=m*p;a*=0.5;v+=a*vn(p);return v*1.85;}
+float tri(vec3 n,float sc,float s){vec3 q=n*sc+s;vec3 w=abs(n);w=w*w*w*w*w*w;w/=(w.x+w.y+w.z+0.0001);return fbm(q.yz)*w.x+fbm(q.xz)*w.y+fbm(q.xy)*w.z;}
+void main(){
+  vec3 N=normalize(vNorm);vec3 L=normalize(uSun);float h;
+  if(uGas>0.5){float lat=vPos.y*0.5+0.5;float warp=tri(vPos,3.0,uSeed)*0.16;float band=vn(vec2(lat*11.0+warp,uSeed));h=clamp(lat*0.4+band*0.7,0.0,1.0);}
+  else{float c=tri(vPos,2.2,uSeed);float f2=tri(vPos,8.5,uSeed+33.7);float d=tri(vPos,20.0,uSeed+77.3);h=clamp(c*0.62+f2*0.28+d*0.10,0.0,1.0);if(uPolar>0.5){float pole=abs(vPos.y);float ice=smoothstep(0.60,0.84,pole);h=mix(h,0.94,ice);}}
+  vec3 col=texture2D(uPal,vec2(clamp(h,0.01,0.99),0.5)).rgb;
+  float sp=texture2D(uSpec,vec2(clamp(h,0.01,0.99),0.5)).r;
+  if(uSpecStr>0.01){float v2=tri(vPos,5.5,uSeed+99.0);float mask=pow(clamp(1.0-abs(v2-0.5)/0.065,0.0,1.0),3.0);col=mix(col,uSpecCol,mask*uSpecStr);sp=mix(sp,0.75,mask*uSpecStr*0.5);}
+  if(uGlow>0.01){float low=1.0-smoothstep(0.0,0.38,h);col+=uGlowCol*low*uGlow*0.45;}
+  float diff=max(dot(N,L),0.0);vec3 V=normalize(vec3(0.0,0.0,1.0)-vPos*0.3);
+  float spec=pow(max(dot(reflect(-L,N),V),0.0),45.0)*sp;
+  col=col*(0.10+diff*0.90)+vec3(spec*0.7);gl_FragColor=vec4(clamp(col,0.0,1.0),1.0);}`;
+const CLOUD_FRAG=`
+precision mediump float;uniform float uSeed;uniform vec3 uSun;varying vec3 vPos;varying vec3 vNorm;
+float h21(vec2 p){p=fract(p*vec2(127.1,311.7));p+=dot(p,p+19.19);return fract(p.x*p.y);}
+float vn(vec2 p){vec2 i=floor(p),f=fract(p),u=f*f*(3.0-2.0*f);return mix(mix(h21(i),h21(i+vec2(1,0)),u.x),mix(h21(i+vec2(0,1)),h21(i+vec2(1,1)),u.x),u.y);}
+float fbm(vec2 p){float v=0.,a=.5;mat2 m=mat2(1.6,1.2,-1.2,1.6);v+=a*vn(p);p=m*p;a*=.5;v+=a*vn(p);p=m*p;a*=.5;v+=a*vn(p);p=m*p;a*=.5;v+=a*vn(p);return v*2.0;}
+float tri(vec3 n,float sc,float s){vec3 q=n*sc+s;vec3 w=abs(n);w=w*w*w*w;w/=(w.x+w.y+w.z+.0001);return fbm(q.yz)*w.x+fbm(q.xz)*w.y+fbm(q.xy)*w.z;}
+void main(){float c=tri(vPos,4.2,uSeed);float cloud=clamp((c-0.53)/0.28,0.0,1.0);float alpha=cloud*cloud;float diff=max(dot(normalize(vNorm),normalize(uSun)),0.0);gl_FragColor=vec4(vec3(0.88+diff*0.12),alpha*0.72);}`;
+
+function genPalettes(a){
+  const W=256,stops=RAMPS[a.type]||RAMPS['rocky'],mc=MC[a.mainColour];
+  const colCv=document.createElement('canvas');colCv.width=W;colCv.height=1;
+  const colCtx=colCv.getContext('2d');const colImg=colCtx.createImageData(W,1);
+  for(let i=0;i<W;i++){const h=i/W;let col=_ramp(stops,h);if(mc){const blend=Math.max(0,Math.min(1,1-Math.abs(h-0.55)/0.45))*0.35;col=[col[0]*(1-blend)+mc[0]*blend,col[1]*(1-blend)+mc[1]*blend,col[2]*(1-blend)+mc[2]*blend];}const idx=i*4;colImg.data[idx]=Math.round(Math.max(0,Math.min(255,col[0])));colImg.data[idx+1]=Math.round(Math.max(0,Math.min(255,col[1])));colImg.data[idx+2]=Math.round(Math.max(0,Math.min(255,col[2])));colImg.data[idx+3]=255;}
+  colCtx.putImageData(colImg,0,0);
+  const specCv=document.createElement('canvas');specCv.width=W;specCv.height=1;const specCtx=specCv.getContext('2d');const specImg=specCtx.createImageData(W,1);
+  for(let i=0;i<W;i++){const sv=Math.round(getSpecular(a.type,i/W)*255);const idx=i*4;specImg.data[idx]=specImg.data[idx+1]=specImg.data[idx+2]=sv;specImg.data[idx+3]=255;}
+  specCtx.putImageData(specImg,0,0);
+  return{color:new THREE.CanvasTexture(colCv),spec:new THREE.CanvasTexture(specCv)};
+}
+
+function buildPlanetGLSL(a, scene, pg2){
+  /* Fallback: render planet entirely in browser using GLSL shaders */
+  const palettes=genPalettes(a);
+  const sc2=SC[a.specialColour]||fSC(a.specialColour);
+  const scVec=sc2?new THREE.Color(sc2[0]/255,sc2[1]/255,sc2[2]/255):new THREE.Color(0,0,0);
+  const th2=gT(a.type);const[ar2,ag2,ab2]=th2.a;
+  const isGlowing=((a.light&&a.light.includes('glowing'))||!!a.glow)?1.0:0.0;
+  const seed2=[...(a.name||'planet')].reduce((s,c)=>s+c.charCodeAt(0),42)*0.00137;
+  const sunPos=new THREE.Vector3(4,2,3).normalize();
+  pg2.add(new THREE.Mesh(new THREE.SphereGeometry(1,96,96),new THREE.ShaderMaterial({
+    uniforms:{uPal:{value:palettes.color},uSpec:{value:palettes.spec},uSun:{value:sunPos},uSpecCol:{value:scVec},uSpecStr:{value:(sc2&&a.special)?0.8:0.0},uSeed:{value:seed2},uPolar:{value:(a.type==='icy'||a.type==='watery / ocean')?1.0:0.0},uGas:{value:a.type==='gas giant'?1.0:0.0},uGlow:{value:isGlowing},uGlowCol:{value:new THREE.Color(ar2*0.9,ag2*0.4,ab2*0.1)}},
+    vertexShader:PLANET_VERT,fragmentShader:PLANET_FRAG,
+  })));
+  if(a.clouds&&!a.clouds.includes('no cloud')){
+    const cSeed=[...(a.name||'x')].reduce((s,c)=>s+c.charCodeAt(0)*3,99)*0.00137;
+    pg2.add(new THREE.Mesh(new THREE.SphereGeometry(1.009,64,64),new THREE.ShaderMaterial({uniforms:{uSeed:{value:cSeed},uSun:{value:sunPos}},vertexShader:PLANET_VERT,fragmentShader:CLOUD_FRAG,transparent:true,depthWrite:false})));
+  }
+}
+
+/* ── STATS ── */
+const TS={'rocky':{tA:-80,tB:320,gA:.4,gB:2.2,dA:10,dB:90,yA:.5,yB:8},'watery / ocean':{tA:-15,tB:50,gA:.7,gB:1.6,dA:16,dB:40,yA:.7,yB:3},'icy':{tA:-220,tB:-40,gA:.4,gB:1.3,dA:20,dB:200,yA:8,yB:300},'volcanic / lava':{tA:350,tB:1400,gA:.6,gB:3.2,dA:8,dB:120,yA:.3,yB:15},'desert / sandy':{tA:40,tB:430,gA:.4,gB:2,dA:10,dB:240,yA:.4,yB:12},'forest / jungle':{tA:10,tB:55,gA:.7,gB:1.3,dA:18,dB:32,yA:.6,yB:2.5},'gas giant':{tA:-160,tB:200,gA:6,gB:28,dA:8,dB:20,yA:8,yB:600},'toxic / acid':{tA:150,tB:750,gA:.5,gB:2.1,dA:80,dB:500,yA:.4,yB:8},'crystal':{tA:-120,tB:220,gA:.9,gB:2.8,dA:40,dB:300,yA:1.5,yB:25}};
+function genStats(a){
+  const seed=[...(a.name||'x')].reduce((s,c)=>s+c.charCodeAt(0)*7,17);
+  const rng=mRng(seed);const s=TS[a.type]||TS['rocky'];
+  const ri=(mn,mx)=>Math.round(mn+rng()*(mx-mn));
+  const rf=(mn,mx,dp=1)=>(mn+rng()*(mx-mn)).toFixed(dp);
+  const mc=a.moons.includes('alone')?0:a.moons.includes('several')?ri(3,7):a.moons.includes('two')?2:a.moons.includes('one')?1:ri(0,2);
+  return{tMin:ri(s.tA,s.tA+(s.tB-s.tA)*.35),tMax:ri(s.tA+(s.tB-s.tA)*.6,s.tB),grav:rf(s.gA,s.gB,2),day:ri(s.dA,s.dB),year:rf(s.yA,s.yB,1),diam:ri(5500,34000),moons:mc};
+}
+
+/* ── INFO PANEL ── */
+function buildInfo(a,st){
+  const nm=a.name||'Unknown World';
+  const tc=(a.type||'unknown');const tcap=tc.charAt(0).toUpperCase()+tc.slice(1);
+
+  // Life badge
+  const lifeLabels={
+    'none':'<span class="badge badge-life-no">No Life</span>',
+    'microscopic':'<span class="badge badge-life-maybe">Microbial Life</span>',
+    'plant-like':'<span class="badge" style="background:rgba(34,197,94,.12);color:#86efac;border:1px solid rgba(34,197,94,.3);">Plant Life</span>',
+    'simple-animals':'<span class="badge badge-life-yes">Simple Animals</span>',
+    'complex-animals':'<span class="badge badge-life-yes">Complex Life</span>',
+    'intelligent':'<span class="badge" style="background:rgba(125,211,252,.12);color:#7dd3fc;border:1px solid rgba(125,211,252,.3);">Intelligent Life</span>',
+  };
+  const lb=lifeLabels[a.lifeType]||'<span class="badge badge-life-maybe">Unknown</span>';
+
+  // Civ badge
+  const civLabels={
+    'primitive':'<span class="badge" style="background:rgba(161,134,80,.12);color:#d4aa55;border:1px solid rgba(161,134,80,.3);">Primitive</span>',
+    'ancient':'<span class="badge" style="background:rgba(161,134,80,.12);color:#d4aa55;border:1px solid rgba(161,134,80,.3);">Ancient Civ</span>',
+    'industrial':'<span class="badge" style="background:rgba(120,113,108,.15);color:#a8a29e;border:1px solid rgba(120,113,108,.3);">Industrial</span>',
+    'modern':'<span class="badge" style="background:rgba(99,102,241,.12);color:#a5b4fc;border:1px solid rgba(99,102,241,.3);">Modern Civ</span>',
+    'advanced':'<span class="badge" style="background:rgba(125,211,252,.12);color:#7dd3fc;border:1px solid rgba(125,211,252,.3);">Advanced Civ 🚀</span>',
+    'unknown':'<span class="badge badge-life-maybe">Unknown Civ</span>',
+  };
+  const cvb=a.civLevel&&a.lifeType==='intelligent'?civLabels[a.civLevel]||'':'';
+
+  const sc=SC[a.specialColour]||fSC(a.specialColour);
+  const dotCol=sc?`rgb(${sc[0]},${sc[1]},${sc[2]})`:'#7dd3fc';
+  const ts=st.tMin<0&&st.tMax<0?`${st.tMin} to ${st.tMax}°C`:st.tMin>200?`${st.tMin} – ${st.tMax}°C 🔥`:`${st.tMin} – ${st.tMax}°C`;
+
+  // Key features
+  const feats=[];
+  if(a.terrain.length)a.terrain.slice(0,2).forEach(t=>feats.push(t.charAt(0).toUpperCase()+t.slice(1)));
+  if(a.special)feats.push(a.special.charAt(0).toUpperCase()+a.special.slice(0,55));
+  if(a.extreme.length)feats.push(a.extreme[0].charAt(0).toUpperCase()+a.extreme[0].slice(1));
+  if(!feats.length){feats.push('Barren rocky landscape');feats.push('Sparse cratered terrain');}
+  const fi=feats.slice(0,4).map(f=>`<div class="feature-item"><span class="feature-dot" style="background:${dotCol}"></span><span>${f}</span></div>`).join('');
+
+  // Life section
+  let lifeSection='';
+  if(a.lifeType&&a.lifeType!=='none'){
+    const lifeDesc={
+      'microscopic':'Microbial — bacteria, algae and single-celled organisms only',
+      'plant-like':'Vegetation — plant-like life but no animals',
+      'simple-animals':'Simple — insects, fish and small creatures',
+      'complex-animals':'Complex — a rich ecosystem of large animals',
+      'intelligent':'Intelligent — beings with language and civilisation',
+    };
+    const creatureStr=a.creatures?`<div class="feature-item" style="margin-top:0.3rem"><span class="feature-dot" style="background:#6ee7b7"></span><span style="font-style:italic">${a.creatures.charAt(0).toUpperCase()+a.creatures.slice(0,70)}</span></div>`:'';
+    const habStr=a.habFactors.filter(h=>!h.includes('cannot')).length
+      ?`<div class="feature-item"><span class="feature-dot" style="background:#6ee7b7"></span><span>Habitable via: ${a.habFactors.filter(h=>!h.includes('cannot')).slice(0,2).map(h=>h.split(' ')[0]+' '+h.split(' ')[1]).join(', ')}</span></div>`:'';
+    lifeSection=`<div class="features-title" style="margin-top:1rem;color:#6ee7b7">Life on ${nm}</div>
+    <div class="features-list">
+      <div class="feature-item"><span class="feature-dot" style="background:#6ee7b7"></span><span>${lifeDesc[a.lifeType]||''}</span></div>
+      ${creatureStr}${habStr}
+    </div>`;
+  }
+
+  return`<div class="planet-name-display">${nm}</div>
+  <div class="planet-badges"><span class="badge badge-type">${tcap}</span>${lb}${cvb}</div>
+  <div class="stat-grid">
+    <div class="stat-item"><div class="stat-label">Diameter</div><div class="stat-value">${st.diam.toLocaleString()} km</div></div>
+    <div class="stat-item"><div class="stat-label">Gravity</div><div class="stat-value">${st.grav}× Earth</div></div>
+    <div class="stat-item"><div class="stat-label">Temperature</div><div class="stat-value" style="font-size:.78rem;line-height:1.3">${ts}</div></div>
+    <div class="stat-item"><div class="stat-label">Day Length</div><div class="stat-value">${st.day} hours</div></div>
+    <div class="stat-item"><div class="stat-label">Year Length</div><div class="stat-value">${st.year} Earth yrs</div></div>
+    <div class="stat-item"><div class="stat-label">Moons</div><div class="stat-value">${st.moons} moon${st.moons!==1?'s':''}</div></div>
+  </div>
+  <div class="features-title">Key Features</div>
+  <div class="features-list">${fi}</div>
+  ${lifeSection}`;
+}
+
+/* ── THREE.JS PLANET ── */
+let tRen=null,tAnim=null;
+
+async function loadPlanetTextures(a){
+  /* Call the Flask backend to generate high-quality textures */
+  const params={
+    name:a.name, type:a.type, mainColour:a.mainColour,
+    specialColour:a.specialColour, special:a.special,
+    clouds:a.clouds, surface:a.surface, terrain:a.terrain,
+    lifeType:a.lifeType, civLevel:a.civLevel,
+  };
+  const resp = await fetch('/api/planet',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(params),
+  });
+  if(!resp.ok) throw new Error('Texture generation failed');
+  return await resp.json();
+}
+
+function buildPlanetScene(a, texData){
+  const col=document.getElementById('planet-info-col');
+  const cv=document.getElementById('planet-canvas-3d');
+  if(tRen){cancelAnimationFrame(tAnim);tRen.dispose();tRen=null;}
+
+  const st=genStats(a);
+  col.innerHTML=buildInfo(a,st);
+
+  const pCol=cv.parentElement;
+  const SZ=Math.min(pCol.clientWidth-32||360,380);
+  cv.width=SZ;cv.height=SZ;
+
+  const scene=new THREE.Scene();
+  const cam=new THREE.PerspectiveCamera(45,1,.1,200);
+  cam.position.set(0,0,2.85);
+
+  tRen=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});
+  tRen.setSize(SZ,SZ);
+  tRen.setPixelRatio(Math.min(devicePixelRatio,2));
+  tRen.setClearColor(0,0);
+  tRen.outputEncoding = THREE.sRGBEncoding;
+  tRen.toneMapping = THREE.ACESFilmicToneMapping;
+  tRen.toneMappingExposure = 1.2;
+
+  // Stars
+  const sg=new THREE.BufferGeometry(),sp=new Float32Array(1500*3);
+  for(let i=0;i<1500*3;i++)sp[i]=(Math.random()-.5)*100;
+  sg.setAttribute('position',new THREE.BufferAttribute(sp,3));
+  scene.add(new THREE.Points(sg,new THREE.PointsMaterial({color:0xffffff,size:.07,sizeAttenuation:true})));
+
+  const pg2=new THREE.Group();scene.add(pg2);
+  const loader=new THREE.TextureLoader();
+
+  // Load server-generated textures
+  const textures=texData.textures;
+  const colorTex=loader.load(textures.color);
+  const normalTex=loader.load(textures.normal);
+  const specTex=loader.load(textures.specular);
+  colorTex.encoding=THREE.sRGBEncoding;
+
+  // PBR MeshStandardMaterial — looks dramatically more realistic than Phong
+  const mat=new THREE.MeshStandardMaterial({
+    map:colorTex,
+    normalMap:normalTex,
+    normalScale:new THREE.Vector2(1.8,1.8),
+    roughnessMap:specTex,
+    metalnessMap:specTex,
+    roughness:0.75,
+    metalness:0.08,
+  });
+  pg2.add(new THREE.Mesh(new THREE.SphereGeometry(1,128,128),mat));
+
+  // Clouds (if server generated them)
+  if(textures.cloud){
+    const cloudTex=loader.load(textures.cloud);
+    const cloudMat=new THREE.MeshStandardMaterial({
+      map:cloudTex,alphaMap:cloudTex,transparent:true,
+      roughness:1,metalness:0,depthWrite:false,
+    });
+    pg2.add(new THREE.Mesh(new THREE.SphereGeometry(1.009,64,64),cloudMat));
+  }
+
+  // Atmosphere Fresnel glow
+  const th=TT[a.type]||TT['rocky'];const[ar,ag,ab]=th.a;
+  scene.add(new THREE.Mesh(new THREE.SphereGeometry(1.14,48,48),new THREE.ShaderMaterial({
+    uniforms:{aC:{value:new THREE.Color(ar,ag,ab)}},
+    vertexShader:'varying vec3 vN;void main(){vN=normalize(normalMatrix*normal);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+    fragmentShader:'varying vec3 vN;uniform vec3 aC;void main(){float i=pow(clamp(.72-dot(vN,vec3(0.,0.,1.)),0.,1.),3.2);gl_FragColor=vec4(aC,i*.9);}',
+    blending:THREE.AdditiveBlending,side:THREE.BackSide,transparent:true,depthWrite:false
+  })));
+
+  // Rings
+  if(a.extreme&&a.extreme.includes('enormous planetary rings')){
+    const rM=new THREE.Mesh(new THREE.RingGeometry(1.38,2.15,80),
+      new THREE.MeshBasicMaterial({color:new THREE.Color(ar*.7+.1,ag*.5+.1,ab*.4+.1),side:THREE.DoubleSide,transparent:true,opacity:.38}));
+    rM.rotation.x=Math.PI*.38;pg2.add(rM);
+  }
+
+  // PBR lighting — environment + directional sun
+  const sunI=a.light&&a.light.includes('glowing')?.65:a.light&&a.light.includes('dimly')?.7:1.35;
+  const sun=new THREE.DirectionalLight(0xfff8f0,sunI);sun.position.set(4,2,3);scene.add(sun);
+  const amb=a.light&&a.light.includes('dimly')?.05:a.light&&a.light.includes('brightly')?.45:.20;
+  scene.add(new THREE.AmbientLight(0x334466,amb));
+  // Rim light for atmosphere effect
+  const rim=new THREE.DirectionalLight(new THREE.Color(ar*0.5,ag*0.5,ab*0.5),0.3);
+  rim.position.set(-3,-1,-3);scene.add(rim);
+
+  // Drag controls
+  let drag=false,prevX=0,velX=0,rotY=0;
+  cv.addEventListener('mousedown',e=>{drag=true;prevX=e.clientX;velX=0;});
+  window.addEventListener('mousemove',e=>{if(!drag)return;velX=e.clientX-prevX;rotY+=velX*.013;prevX=e.clientX;});
+  window.addEventListener('mouseup',()=>{drag=false;});
+  cv.addEventListener('touchstart',e=>{drag=true;prevX=e.touches[0].clientX;velX=0;},{passive:true});
+  window.addEventListener('touchmove',e=>{if(!drag)return;velX=e.touches[0].clientX-prevX;rotY+=velX*.013;prevX=e.touches[0].clientX;},{passive:true});
+  window.addEventListener('touchend',()=>{drag=false;});
+
+  let t=0;
+  function anim(){tAnim=requestAnimationFrame(anim);t+=.005;if(!drag)velX*=.91;rotY+=drag?0:velX*.013+.003;pg2.rotation.y=rotY;pg2.rotation.x=Math.sin(t*.25)*.04;tRen.render(scene,cam);}
+  anim();
+}
+
+async function buildPlanet(a){
+  const col=document.getElementById('planet-info-col');
+  const cv=document.getElementById('planet-canvas-3d');
+
+  // Show loading spinner
+  col.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:1rem;padding:2rem;">
+    <div style="width:48px;height:48px;border-radius:50%;border:3px solid rgba(125,211,252,0.15);border-top-color:#7dd3fc;animation:spin 1s linear infinite;"></div>
+    <div style="font-family:'Orbitron',monospace;font-size:0.8rem;color:#334155;letter-spacing:0.1em;">GENERATING PLANET...</div>
+  </div>`;
+
+  // Always set up the Three.js scene first
+  if(tRen){cancelAnimationFrame(tAnim);tRen.dispose();tRen=null;}
+  const pCol=cv.parentElement;
+  const SZ=Math.min(pCol.clientWidth-32||360,380);
+  cv.width=SZ;cv.height=SZ;
+  const scene=new THREE.Scene();
+  const cam=new THREE.PerspectiveCamera(45,1,.1,200);
+  cam.position.set(0,0,2.85);
+  tRen=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});
+  tRen.setSize(SZ,SZ);tRen.setPixelRatio(Math.min(devicePixelRatio,2));tRen.setClearColor(0,0);
+
+  // Stars (always shown)
+  const sg=new THREE.BufferGeometry(),sp=new Float32Array(1500*3);
+  for(let i=0;i<1500*3;i++)sp[i]=(Math.random()-.5)*100;
+  sg.setAttribute('position',new THREE.BufferAttribute(sp,3));
+  scene.add(new THREE.Points(sg,new THREE.PointsMaterial({color:0xffffff,size:.07,sizeAttenuation:true})));
+
+  const pg2=new THREE.Group();scene.add(pg2);
+
+  // Atmosphere glow (always shown)
+  const th=TT[a.type]||TT['rocky'];const[ar,ag,ab]=th.a;
+  scene.add(new THREE.Mesh(new THREE.SphereGeometry(1.14,48,48),new THREE.ShaderMaterial({
+    uniforms:{aC:{value:new THREE.Color(ar,ag,ab)}},
+    vertexShader:'varying vec3 vN;void main(){vN=normalize(normalMatrix*normal);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+    fragmentShader:'varying vec3 vN;uniform vec3 aC;void main(){float i=pow(clamp(.72-dot(vN,vec3(0.,0.,1.)),0.,1.),3.2);gl_FragColor=vec4(aC,i*.9);}',
+    blending:THREE.AdditiveBlending,side:THREE.BackSide,transparent:true,depthWrite:false
+  })));
+
+  // Rings
+  if(a.extreme&&a.extreme.includes('enormous planetary rings')){
+    const rM=new THREE.Mesh(new THREE.RingGeometry(1.38,2.15,80),new THREE.MeshBasicMaterial({color:new THREE.Color(ar*.7+.1,ag*.5+.1,ab*.4+.1),side:THREE.DoubleSide,transparent:true,opacity:.38}));
+    rM.rotation.x=Math.PI*.38;pg2.add(rM);
+  }
+
+  // Lights
+  const sunI=a.light&&a.light.includes('glowing')?.65:a.light&&a.light.includes('dimly')?.7:1.35;
+  const sun=new THREE.DirectionalLight(0xfff8f0,sunI);sun.position.set(4,2,3);scene.add(sun);
+  const amb=a.light&&a.light.includes('dimly')?.05:a.light&&a.light.includes('brightly')?.45:.20;
+  scene.add(new THREE.AmbientLight(0x334466,amb));
+  const rim=new THREE.DirectionalLight(new THREE.Color(ar*0.5,ag*0.5,ab*0.5),0.3);
+  rim.position.set(-3,-1,-3);scene.add(rim);
+
+  // Drag controls
+  let drag=false,prevX=0,velX=0,rotY=0;
+  cv.addEventListener('mousedown',e=>{drag=true;prevX=e.clientX;velX=0;});
+  window.addEventListener('mousemove',e=>{if(!drag)return;velX=e.clientX-prevX;rotY+=velX*.013;prevX=e.clientX;});
+  window.addEventListener('mouseup',()=>{drag=false;});
+  cv.addEventListener('touchstart',e=>{drag=true;prevX=e.touches[0].clientX;velX=0;},{passive:true});
+  window.addEventListener('touchmove',e=>{if(!drag)return;velX=e.touches[0].clientX-prevX;rotY+=velX*.013;prevX=e.touches[0].clientX;},{passive:true});
+  window.addEventListener('touchend',()=>{drag=false;});
+  let t=0;
+  function anim(){tAnim=requestAnimationFrame(anim);t+=.005;if(!drag)velX*=.91;rotY+=drag?0:velX*.013+.003;pg2.rotation.y=rotY;pg2.rotation.x=Math.sin(t*.25)*.04;tRen.render(scene,cam);}
+  anim();
+
+  // Try to load server-generated high-quality textures
+  let usedAPI = false;
+  try {
+    const texData = await loadPlanetTextures(a);
+    buildPlanetScene_API(a, scene, pg2, texData);
+    usedAPI = true;
+  } catch(err) {
+    // API not available — fall back silently to GLSL shaders in browser
+    console.info('Flask API not available, using browser GLSL renderer');
+    buildPlanetGLSL(a, scene, pg2);
+  }
+
+  // Build info panel with quality indicator
+  const st=genStats(a);
+  const blenderOK = usedAPI && texData && texData.textures && texData.textures.blender_available;
+  const qualityNote = blenderOK
+    ? `<div class="quality-badge quality-blender">✦ Blender render · GLB model loaded</div>`
+    : usedAPI
+    ? `<div class="quality-badge quality-browser">✦ Server textures · browser render</div>`
+    : `<div class="quality-badge quality-browser">⬡ Browser render</div>`;
+  const infoHTML = qualityNote + buildInfo(a, st);
+  col.innerHTML = infoHTML;
+  // Mirror info panel into render tab
+  const renderCol = document.getElementById('planet-info-col-render');
+  if(renderCol) renderCol.innerHTML = infoHTML;
+  // Dim render tab until render is ready (if no Blender)
+  const rt=document.getElementById('render-tab');
+  if(rt && !blenderOK){rt.style.opacity='0.4';rt.style.pointerEvents='none';}
+}
+
+function buildPlanetScene_API(a, scene, pg2, texData){
+  const textures=texData.textures;
+
+  if(textures.glb && typeof THREE.GLTFLoader !== 'undefined'){
+    /* Best path: load Blender-generated GLB with real displaced geometry */
+    const gltfLoader=new THREE.GLTFLoader();
+    gltfLoader.load(textures.glb, function(gltf){
+      // Scale and centre the loaded model
+      gltf.scene.scale.set(1,1,1);
+      pg2.add(gltf.scene);
+    }, undefined, function(err){
+      console.warn('GLB load failed, falling back to texture sphere:', err);
+      _loadTextureSphere(pg2, textures);
+    });
+  } else {
+    /* Fallback: textured sphere (still better than GLSL thanks to high-res PBR textures) */
+    _loadTextureSphere(pg2, textures);
+  }
+
+  // Show cinematic render in the render tab
+  if(textures.render){
+    const img=document.getElementById('render-img');
+    const loading=document.getElementById('render-loading');
+    img.src=textures.render;
+    img.onload=()=>{img.style.display='block';if(loading)loading.style.display='none';};
+    img.onerror=()=>{if(loading)loading.innerHTML='<span style="color:#ef4444;font-size:.82rem;">Render not available</span>';};
+    // Enable render tab
+    const rt=document.getElementById('render-tab');
+    if(rt){rt.style.opacity='1';rt.style.pointerEvents='auto';}
+  } else {
+    // No render yet — show message
+    const loading=document.getElementById('render-loading');
+    if(loading)loading.innerHTML='<span style="color:#475569;font-size:.78rem;text-align:center;padding:1rem;">Cinematic render not available.<br><small>Blender must be installed on the server.</small></span>';
+  }
+}
+
+function _loadTextureSphere(pg2, textures){
+  const loader=new THREE.TextureLoader();
+  const colorTex=loader.load(textures.color);
+  const normalTex=loader.load(textures.normal);
+  const specTex=loader.load(textures.specular);
+  const mat=new THREE.MeshStandardMaterial({
+    map:colorTex,normalMap:normalTex,
+    normalScale:new THREE.Vector2(1.8,1.8),
+    roughnessMap:specTex,metalnessMap:specTex,
+    roughness:0.75,metalness:0.08,
+  });
+  pg2.add(new THREE.Mesh(new THREE.SphereGeometry(1,128,128),mat));
+  if(textures.cloud){
+    const cloudTex=loader.load(textures.cloud);
+    pg2.add(new THREE.Mesh(new THREE.SphereGeometry(1.009,64,64),
+      new THREE.MeshStandardMaterial({map:cloudTex,alphaMap:cloudTex,transparent:true,roughness:1,metalness:0,depthWrite:false})));
+  }
+}
+
+/* ── GENERATE ── */
+function generate(){
+  const a={
+    name:document.getElementById('q-name').value.trim(),
+    type:document.getElementById('q-type').value,
+    life:document.getElementById('q-life').value,
+    mainColour:document.getElementById('q-main-colour').value,
+    otherColours:document.getElementById('q-other-colours').value.trim(),
+    surface:gC('pg-surface'),terrain:gC('pg-terrain'),extreme:gC('pg-extreme'),
+    special:document.getElementById('q-special').value.trim(),
+    specialColour:document.getElementById('q-special-colour').value.trim(),
+    clouds:document.getElementById('q-clouds').value,
+    atmo:gC('pg-atmo'),space:document.getElementById('q-space').value,
+    moons:document.getElementById('q-moons').value,
+    light:document.getElementById('q-light').value,
+    glow:document.getElementById('q-glow').value,
+    artStyle:(document.querySelector('input[name="art-style"]:checked')||{}).value||'Ultra-realistic, photorealistic, NASA-style space photography',
+    camView:(document.querySelector('input[name="cam-view"]:checked')||{}).value||'space',
+    focusFeature:document.getElementById('q-focus-feature').value.trim(),
+    habFactors:gC('pg-hab'),
+    lifeType:(document.querySelector('input[name="life-type"]:checked')||{}).value||'',
+    civLevel:(document.querySelector('input[name="civ-level"]:checked')||{}).value||'',
+    creatures:document.getElementById('q-creatures').value.trim(),
+    diet:gC('pg-diet'),
+    mediaType:(document.querySelector('input[name="media-type"]:checked')||{}).value||'image',
+  };
+  const parts=[];const pN=a.name?`"${a.name}"`:'an alien planet';
+  const isVideo=a.mediaType==='video';
+
+  if(isVideo){
+    // ── VIDEO PROMPT — completely different structure ──
+    if(a.camView==='surface'){
+      // Ground-level camera pan
+      const feature=a.focusFeature||'the alien landscape';
+      parts.push(`A short cinematic video clip shot on the surface of alien planet ${pN}. The camera begins still, then slowly and smoothly pans from left to right, gradually revealing the dramatic alien landscape ahead.`);
+      if(a.focusFeature) parts.push(`The camera is facing ${a.focusFeature}, slowly sweeping across to reveal its full scale.`);
+      // Environment
+      const gr=[];if(a.mainColour)gr.push(a.mainColour);if(a.type)gr.push(a.type);
+      if(gr.length)parts.push(`The terrain is ${gr.join(', and ')}.`);
+      if(a.surface.length)parts.push(`The ground shows ${jL(a.surface)}.`);
+      if(a.terrain.length){const j=jL(a.terrain);parts.push(`${j.charAt(0).toUpperCase()+j.slice(1)} rise dramatically in the distance.`);}
+      if(a.special){let s=`A vivid feature in view is ${a.special}`;if(a.specialColour)s+=`, glowing ${a.specialColour}`;parts.push(s+'.');}
+      // Sky
+      const sky=[];if(a.clouds&&!a.clouds.includes('no cloud'))sky.push(a.clouds);sky.push(...a.atmo);
+      if(sky.length)parts.push(`The sky shows ${jL(sky)}.`);
+      if(a.moons&&!a.moons.includes('alone')){const ms=a.moons.replace('with one large cratered moon visible close by','A large moon is visible in the sky').replace('with two smaller moons orbiting nearby','Two moons hang in the sky above').replace(/with.*/,'Moons are visible overhead');parts.push(ms+'.');}
+      // Life
+      if(a.lifeType==='intelligent'){
+        if(a.creatures)parts.push(`${a.creatures.charAt(0).toUpperCase()+a.creatures.slice(1)} can be seen in the scene.`);
+        if(a.civLevel==='advanced')parts.push(`Futuristic structures and glowing technology are visible across the landscape.`);
+        else if(a.civLevel==='modern')parts.push(`Buildings and structures of a modern civilisation are visible.`);
+        else if(a.civLevel==='ancient')parts.push(`Ancient stone structures and settlements dot the landscape.`);
+      } else if(a.lifeType==='complex-animals'&&a.creatures){
+        parts.push(`${a.creatures.charAt(0).toUpperCase()+a.creatures.slice(1)} move through the scene.`);
+      } else if(['plant-like','simple-animals','complex-animals'].includes(a.lifeType)){
+        parts.push(`Signs of life are visible in the vegetation and movement around the landscape.`);
+      }
+      if(a.light&&a.light.includes('shadow'))parts.push(`Dramatic side lighting casts long shadows across the terrain.`);
+      else if(a.light)parts.push(`Lighting: ${a.light}.`);
+      if(a.glow)parts.push(a.glow);
+      // Camera and video instructions
+      parts.push(`Camera movement: slow, smooth, continuous pan from left to right. No cuts, no jump cuts, no camera shake. The movement is steady and cinematic.`);
+      parts.push(`Style: ${a.artStyle}. Cinematic wide-angle lens. High quality, sharp focus.`);
+
+    } else {
+      // Space view — rotating planet
+      let op=`A short cinematic video of the alien planet ${pN} filmed from space. The planet is centred in frame as a complete sphere`;
+      if(a.space)op+=`, set ${a.space}`;
+      if(a.moons&&!a.moons.includes('alone'))op+=`, with ${a.moons} visible nearby`;
+      parts.push(op+'.');
+      // Planet description
+      const ct=[];if(a.mainColour)ct.push(a.mainColour);if(a.type)ct.push(a.type);
+      if(ct.length){let s=`The planet is ${ct.join(' and ')}`;if(a.otherColours)s+=`, with ${a.otherColours} across the surface`;parts.push(s+'.');}
+      if(a.surface.length)parts.push(`The surface shows ${jL(a.surface)}.`);
+      if(a.terrain.length)parts.push(`The terrain features ${jL(a.terrain)}.`);
+      if(a.extreme.length)parts.push(`Dramatic features include ${jL(a.extreme)}.`);
+      if(a.special){let s=`A vivid feature is ${a.special}`;if(a.specialColour)s+=`, glowing ${a.specialColour} across the surface`;parts.push(s+'.');}
+      let atS='';if(a.clouds)atS=`The atmosphere shows ${a.clouds}`;if(a.atmo.length){const j=jL(a.atmo);atS+=atS?`, with ${j}`:`The atmosphere has ${j}`;}if(atS)parts.push(atS+'.');
+      // Life signs from orbit
+      if(a.lifeType==='intelligent'){
+        if(a.civLevel==='advanced')parts.push(`On the night side, city lights and energy networks blaze across the surface.`);
+        else if(a.civLevel==='modern')parts.push(`On the night side, clusters of city lights are visible.`);
+      } else if(['plant-like','simple-animals','complex-animals'].includes(a.lifeType)){
+        parts.push(`Rich colour variations hint at life on the surface.`);
+      }
+      if(a.light&&a.light.includes('shadow'))parts.push(`Cinematic lighting — one side brightly lit by its sun, the other side softly lit by reflected light, showing surface detail across the whole planet.`);
+      else if(a.light)parts.push(`Lighting: ${a.light}.`);
+      if(a.glow)parts.push(a.glow);
+      // Rotation instructions — the key video element
+      parts.push(`Camera movement: the camera remains completely still and fixed in space. The planet rotates slowly and smoothly from left to right on its axis, making approximately one quarter turn. The rotation is slow, smooth, and continuous — no sudden movements, no camera shake, no cuts.`);
+      parts.push(`Style: ${a.artStyle}. The complete sphere is always visible and centred. Cinematic quality, smooth motion.`);
+    }
+
+  } else if(a.camView==='surface'){
+    let op=`A ground-level view standing on the alien surface of ${pN}`;
+    if(a.focusFeature)op+=`, looking directly towards ${a.focusFeature}`;
+    parts.push(op+'.');
+    const gr=[];if(a.mainColour)gr.push(a.mainColour);if(a.surface.length)gr.push(jL(a.surface));
+    if(gr.length)parts.push(`The ground underfoot is ${gr.join(', ')}.`);else if(a.type)parts.push(`The terrain is ${a.type}.`);
+    if(a.special){let s=`Close by, ${a.special}`;if(a.specialColour)s+=`, glowing in ${a.specialColour}`;parts.push(s+'.');}else if(a.otherColours)parts.push(`The surface shows ${a.otherColours}.`);
+    if(a.terrain.length){const j=jL(a.terrain);parts.push(`${j.charAt(0).toUpperCase()+j.slice(1)} stretch dramatically towards the horizon.`);}
+    if(a.extreme.length)parts.push(`The landscape also shows ${jL(a.extreme)}.`);
+    const sky=[];if(a.clouds&&!a.clouds.includes('no cloud'))sky.push(a.clouds);sky.push(...a.atmo);if(sky.length)parts.push(`The sky above is filled with ${jL(sky)}.`);
+    if(a.moons&&!a.moons.includes('alone')){const ms=a.moons.replace('with one large cratered moon visible close by','A large cratered moon hangs in the sky').replace('with two smaller moons orbiting nearby','Two smaller moons are visible above').replace('with a distant neighbouring planet faintly visible','A distant planet is faintly visible in the sky').replace('with several moons and a distant ringed planet visible','Several moons and a distant ringed planet hang overhead');parts.push(ms+'.');}
+    if(a.light)parts.push(`Lighting: ${a.light}.`);if(a.glow)parts.push(a.glow);
+    // Life on the surface
+    if(a.lifeType==='none'){
+      parts.push(`There is absolutely no life here — the landscape is completely barren and lifeless.`);
+    } else if(a.lifeType==='microscopic'){
+      parts.push(`Thin mats of microscopic algae and bacteria tint the rocks in patches of colour, the only signs of life.`);
+    } else if(a.lifeType==='plant-like'){
+      parts.push(`Alien plant-like vegetation covers much of the ground — strange in colour and form, but thriving.`);
+    } else if(a.lifeType==='simple-animals'){
+      parts.push(`Small alien creatures can be glimpsed amongst the vegetation — insect-like or fish-like in form.`);
+    } else if(a.lifeType==='complex-animals'){
+      if(a.creatures) parts.push(`Visible in the scene are ${a.creatures}, going about their lives in this alien world.`);
+      else parts.push(`Large and complex alien animals inhabit this landscape, part of a rich and varied ecosystem.`);
+    } else if(a.lifeType==='intelligent'){
+      if(a.creatures) parts.push(`The intelligent beings here are ${a.creatures}.`);
+      if(a.civLevel==='primitive') parts.push(`Simple tribal shelters and campfires are visible — a primitive civilisation in its earliest stages.`);
+      else if(a.civLevel==='ancient') parts.push(`Ancient stone structures, temples and settlements are visible, built by this world's civilisation.`);
+      else if(a.civLevel==='industrial') parts.push(`Industrial buildings, chimneys and early mechanical infrastructure dot the landscape.`);
+      else if(a.civLevel==='modern') parts.push(`Modern structures, roads and technology are visible — a civilisation at a similar level to Earth today.`);
+      else if(a.civLevel==='advanced') parts.push(`Futuristic megastructures, glowing energy infrastructure and advanced technology fill the scene.`);
+      else if(a.civLevel==='unknown') parts.push(`Mysterious ancient structures of unknown origin rise from the landscape.`);
+    }
+    if(a.habFactors.length&&!a.habFactors.includes('none — this planet cannot support life'))
+      parts.push(`This planet is habitable thanks to ${jL(a.habFactors)}.`);
+    parts.push(`Style: ${a.artStyle}. Highly detailed, immersive wide-angle ground-level perspective, cinematic, 8K resolution, sharp focus, epic scale.`);
+  }else{
+    // ── SPACE VIEW ──
+    // Opening: full sphere framing — stated clearly, not overly repeated
+    let op=`A ${a.artStyle.toLowerCase().includes('cartoon')?'vibrant illustrated':'highly detailed photorealistic'} image of the alien planet ${pN} seen from space, centred in the frame as a complete sphere with black space visible all around it`;
+    if(a.space)op+=`. ${a.space.charAt(0).toUpperCase()+a.space.slice(1)}`;
+    if(a.moons&&!a.moons.includes('alone'))op+=`, ${a.moons}`;
+    parts.push(op+'.');
+    // Colour, type and surface — described naturally
+    const ct=[];if(a.mainColour)ct.push(a.mainColour);if(a.type)ct.push(a.type);
+    if(ct.length){
+      let s=`The planet is ${ct.join(' and ')}`;
+      if(a.otherColours)s+=`, with ${a.otherColours} across the surface`;
+      parts.push(s+'.');
+    }
+    if(a.surface.length)parts.push(`The surface is covered with ${jL(a.surface)}.`);
+    if(a.terrain.length)parts.push(`The terrain features ${jL(a.terrain)}.`);
+    if(a.extreme.length)parts.push(`Dramatic features visible from space include ${jL(a.extreme)}.`);
+    if(a.special){
+      let s=`A striking feature is ${a.special}`;
+      if(a.specialColour)s+=`, glowing ${a.specialColour} in vivid winding patterns across the surface`;
+      parts.push(s+'.');
+    }
+    // Atmosphere
+    let atS='';
+    if(a.clouds)atS=`The atmosphere shows ${a.clouds}`;
+    if(a.atmo.length){const j=jL(a.atmo);atS+=atS?`, with ${j}`:`The atmosphere has ${j}`;}
+    if(atS)parts.push(atS+'.');
+    // Life signs visible from orbit
+    if(a.lifeType==='none'){
+      parts.push(`The planet shows no signs of life — its surface is completely barren.`);
+    } else if(a.lifeType==='microscopic'){
+      parts.push(`Faint colour variations in the oceans and soil hint at microscopic life, invisible from this distance but detectable.`);
+    } else if(a.lifeType==='plant-like'){
+      parts.push(`Large regions of alien vegetation create distinctive colour patches visible from orbit — the planet is clearly alive.`);
+    } else if(a.lifeType==='simple-animals'||a.lifeType==='complex-animals'){
+      parts.push(`Rich ecosystems of plant and animal life create varied organic colour patterns visible across the surface.`);
+    } else if(a.lifeType==='intelligent'){
+      if(a.civLevel==='primitive'||a.civLevel==='ancient'){
+        parts.push(`The planet shows signs of life and early civilisation — small settlements may be visible as faint marks on the surface.`);
+      } else if(a.civLevel==='industrial'){
+        parts.push(`Dark smudges of industrial activity and the geometry of cities and roads are faintly visible on the surface.`);
+      } else if(a.civLevel==='modern'){
+        parts.push(`A civilised world — on the night side, clusters of lights from cities are visible, and the geometry of roads and settlements can be seen.`);
+      } else if(a.civLevel==='advanced'){
+        parts.push(`A highly advanced civilisation has transformed this planet. Megastructures, vast energy networks and orbital installations are visible. On the night side the planet blazes with city lights.`);
+      } else {
+        parts.push(`Mysterious signs of an unknown civilisation are visible as geometric patterns on the surface.`);
+      }
+    }
+    if(a.habFactors.length&&!a.habFactors.some(h=>h.includes('cannot')))
+      parts.push(`The planet is habitable thanks to ${jL(a.habFactors)}.`);
+    // Lighting — softened so the whole surface stays visible
+    if(a.light&&a.light.includes('shadow')){
+      parts.push(`Dramatic cinematic lighting with a bright sun illuminating one side, the other side lit by soft reflected starlight so surface detail remains visible across the whole planet.`);
+    } else if(a.light){
+      parts.push(`Lighting: ${a.light}.`);
+    }
+    if(a.glow)parts.push(a.glow);
+    // Style: clean, no negative restrictions — trust the framing instruction
+    parts.push(`Style: ${a.artStyle}. The complete planet sphere must be visible and centred in the frame with space around it. Rich, vivid surface colour and texture. Cinematic composition, 8K resolution, sharp focus, award-winning space art.`);
+  }
+  document.getElementById('result-prompt').textContent=parts.join(' ');
+  const viewLabel=a.camView==='surface'?'Surface':'Space';
+  const mediaLabel=a.mediaType==='video'?'Video':'Image';
+  document.getElementById('result-tag').textContent=`✦ Your ${viewLabel} View ${mediaLabel} Prompt`;
+  // Update copy button label for video
+  document.getElementById('copy-btn').textContent=a.mediaType==='video'?'📋 Copy Video Prompt':'📋 Copy Prompt';
+  // Update tips text
+  const tipsEl=document.getElementById('tips-text');
+  if(tipsEl){
+    if(a.mediaType==='video'){
+      tipsEl.innerHTML='📌 <strong>Video prompt ready:</strong> Copy and paste this into your AI video generator. The prompt includes specific camera movement instructions for the animation.';
+    } else {
+      tipsEl.innerHTML='📌 <strong>Where to use this:</strong> Copy and paste into <strong>Adobe Firefly</strong>, <strong>Microsoft Copilot Designer</strong>, or <strong>Canva AI</strong>.';
+    }
+  }
+  const res=document.getElementById('result');res.classList.add('show');
+  const sec=document.getElementById('planet-section');sec.classList.add('show');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>sec.classList.add('visible')));
+  buildPlanet(a);
+  res.scrollIntoView({behavior:'smooth',block:'start'});
+  document.getElementById('pbar').style.width='100%';
+}
+
+/* ── TAB SWITCHING ── */
+function switchTab(name){
+  document.querySelectorAll('.planet-tab-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.planet-tab').forEach(t=>t.classList.remove('active'));
+  const pane=document.getElementById('pane-'+name);
+  if(pane)pane.classList.add('active');
+  const tabs=document.querySelectorAll('.planet-tab');
+  const idx=name==='view3d'?0:1;
+  if(tabs[idx])tabs[idx].classList.add('active');
+  // Resize Three.js renderer when tab becomes visible
+  if(name==='view3d'&&tRen){
+    const cv=document.getElementById('planet-canvas-3d');
+    const pCol=cv.parentElement;
+    const SZ=Math.min(pCol.clientWidth-32||360,380);
+    tRen.setSize(SZ,SZ);
+  }
+}
+
+/* ── COPY ── */
+function copyIt(){
+  const text=document.getElementById('result-prompt').textContent;
+  const btn=document.getElementById('copy-btn');
+  function onSuccess(){btn.textContent='✅ Copied!';btn.classList.add('done');setTimeout(()=>{btn.textContent='📋 Copy Prompt';btn.classList.remove('done');},2500);}
+  // Modern clipboard API (requires HTTPS)
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(text).then(onSuccess).catch(()=>fallbackCopy(text,onSuccess));
+  } else {
+    fallbackCopy(text,onSuccess);
+  }
+}
+function fallbackCopy(text,onSuccess){
+  const ta=document.createElement('textarea');
+  ta.value=text;
+  ta.style.cssText='position:fixed;top:0;left:0;width:2em;height:2em;padding:0;border:none;outline:none;opacity:0;';
+  document.body.appendChild(ta);
+  ta.focus();ta.select();
+  try{
+    const ok=document.execCommand('copy');
+    if(ok)onSuccess();
+  } catch(e){}
+  document.body.removeChild(ta);
+}
+</script>
+</body>
+</html>
