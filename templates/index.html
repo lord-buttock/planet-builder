@@ -156,9 +156,12 @@ select option{background:#0d1f38;color:#e2e8f0;}
 .video-note strong{color:#a78bfa;}
 
 /* ── 3D PLANET SECTION ── */
-.planet-section{display:none;margin-top:2rem;opacity:0;transform:translateY(30px);transition:opacity 0.7s ease,transform 0.7s ease;}
+.planet-section{display:none;margin-top:2rem;opacity:0;
+  transition:opacity 0.7s ease;
+  width:min(1100px,calc(100vw - 2rem));
+  position:relative;left:50%;transform:translateX(-50%);}
 .planet-section.show{display:block;}
-.planet-section.visible{opacity:1;transform:translateY(0);}
+.planet-section.visible{opacity:1;}
 .planet-outer{background:rgba(4,10,26,0.97);border:1px solid rgba(125,211,252,0.18);border-radius:26px;overflow:hidden;position:relative;}
 .planet-outer::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
   background:linear-gradient(90deg,#a78bfa,#7dd3fc,#34d399,#a78bfa);
@@ -170,10 +173,6 @@ select option{background:#0d1f38;color:#e2e8f0;}
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
 .planet-header-text p{font-size:0.8rem;color:#334155;margin-top:0.15rem;}
 .planet-body{display:grid;grid-template-columns:1fr 1fr;min-height:380px;}
-@media(max-width:620px){
-  .planet-body{grid-template-columns:1fr;}
-  .planet-info-col{border-left:none;border-top:1px solid rgba(255,255,255,0.05);}
-}
 .planet-canvas-col{position:relative;display:flex;align-items:center;justify-content:center;
   background:transparent;min-height:340px;padding:1rem;min-width:0;}
 #planet-canvas-3d{display:block;cursor:grab;border-radius:12px;}
@@ -183,8 +182,20 @@ select option{background:#0d1f38;color:#e2e8f0;}
   display:flex;align-items:center;gap:0.5rem;pointer-events:none;white-space:nowrap;}
 .drag-hint::before,.drag-hint::after{content:'';width:18px;height:1px;background:#1e3a5f;}
 .planet-info-col{border-left:1px solid rgba(255,255,255,0.05);padding:1.5rem 1.25rem;
-  display:flex;flex-direction:column;gap:0;overflow-y:auto;min-width:0;overflow-x:hidden;}
-@media(max-width:620px){.planet-info-col{border-left:none;border-top:1px solid rgba(255,255,255,0.05);}}
+  display:flex;flex-direction:column;gap:0;overflow-y:auto;min-width:220px;}
+.planet-footer{padding:0.9rem 2rem;border-top:1px solid rgba(255,255,255,0.04);}
+.planet-footer p{font-size:0.76rem;color:#1e3a5f;line-height:1.6;}
+.planet-footer strong{color:#334155;}
+@media(max-width:768px){
+  .planet-body{grid-template-columns:1fr;}
+  .planet-info-col{border-left:none;border-top:1px solid rgba(255,255,255,0.05);min-width:0;}
+  .planet-canvas-col{min-height:280px;}
+}
+@media(max-width:568px){
+  .planet-canvas-col{padding:0.75rem;min-height:240px;}
+  .planet-info-col{padding:1rem 0.9rem;}
+  .planet-header{padding:1rem 1.25rem 0.5rem;}
+}
 .planet-name-display{font-family:'Orbitron',monospace;font-size:1.2rem;font-weight:900;
   color:#e2e8f0;letter-spacing:0.03em;line-height:1.2;margin-bottom:0.5rem;word-break:break-word;overflow-wrap:break-word;}
 .planet-badges{display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:1.4rem;}
@@ -201,9 +212,6 @@ select option{background:#0d1f38;color:#e2e8f0;}
 .features-list{display:flex;flex-direction:column;gap:0.38rem;}
 .feature-item{display:flex;align-items:flex-start;gap:0.5rem;font-size:0.82rem;color:#64748b;line-height:1.45;}
 .feature-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:0.45rem;}
-.planet-footer{padding:0.9rem 2rem;border-top:1px solid rgba(255,255,255,0.04);}
-.planet-footer p{font-size:0.76rem;color:#1e3a5f;line-height:1.6;}
-.planet-footer strong{color:#334155;}
 </style>
 </head>
 <body>
@@ -685,7 +693,7 @@ function buildInfo(a,st){
 }
 
 /* ── BABYLON.JS PLANET RENDERER ── */
-let bjsEngine=null,bjsScene=null,bjsAnim=null;
+let bjsEngine=null,bjsScene=null,bjsAnim=null,bjsRO=null;
 
 function loadDT(cv,name){
   const dt=new BABYLON.DynamicTexture(name,{width:cv.width,height:cv.height},bjsScene,true);
@@ -705,14 +713,19 @@ function buildPlanet(a){
 
   // Tear down previous engine
   if(bjsEngine){if(bjsAnim)cancelAnimationFrame(bjsAnim);bjsEngine.dispose();bjsEngine=null;bjsScene=null;}
+  if(bjsRO){bjsRO.disconnect();bjsRO=null;}
 
-  // Measure column width properly, with fallback
   const pCol=canvas.parentElement;
-  const colRect=pCol.getBoundingClientRect();
-  const colW=colRect.width>60?colRect.width:window.innerWidth*0.48;
-  const SZ=Math.max(220,Math.min(Math.floor(colW)-32,360));
-  canvas.width=SZ;canvas.height=SZ;
-
+  function _szCanvas(){
+    const rect=pCol.getBoundingClientRect();
+    const colW=rect.width>60?rect.width:window.innerWidth*0.48;
+    const SZ=Math.max(220,Math.min(Math.floor(colW)-32,420));
+    canvas.width=SZ;canvas.height=SZ;
+    if(bjsEngine)bjsEngine.resize();
+  }
+  _szCanvas();
+  bjsRO=new ResizeObserver(_szCanvas);
+  bjsRO.observe(pCol);
   setTimeout(()=>{
     // Create Babylon engine + scene
     bjsEngine=new BABYLON.Engine(canvas,true,{preserveDrawingBuffer:true,stencil:true,adaptToDeviceRatio:true});
@@ -813,9 +826,6 @@ function buildPlanet(a){
 
     // Render loop
     bjsEngine.runRenderLoop(()=>bjsScene&&bjsScene.render());
-    window.addEventListener('resize',()=>{
-      if(bjsEngine){bjsEngine.resize();}
-    });
   },60);
 }
 
