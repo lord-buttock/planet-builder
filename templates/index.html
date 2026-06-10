@@ -227,6 +227,8 @@ select option{background:#0d1f38;color:#e2e8f0;}
 .canvas-actions{display:flex;gap:0.5rem;justify-content:center;margin-top:0.5rem;flex-wrap:wrap;}
 .canvas-btn{display:inline-flex;align-items:center;gap:0.4rem;padding:0.45rem 0.9rem;background:rgba(20,35,60,0.8);border:1px solid rgba(100,116,139,0.3);border-radius:8px;color:#94a3b8;font-family:'Nunito',sans-serif;font-size:0.8rem;font-weight:700;cursor:pointer;transition:all 0.2s;}
 .canvas-btn:hover{border-color:rgba(125,211,252,0.4);color:#7dd3fc;}
+.fs-btn{position:absolute;top:10px;right:10px;z-index:10;width:32px;height:32px;border-radius:8px;background:rgba(10,22,44,0.75);border:1px solid rgba(125,211,252,0.2);color:#7dd3fc;font-size:1rem;cursor:pointer;display:none;align-items:center;justify-content:center;transition:all 0.2s;backdrop-filter:blur(4px);}
+.fs-btn:hover{background:rgba(10,22,44,0.95);border-color:rgba(125,211,252,0.5);}
 </style>
 </head>
 <body>
@@ -560,6 +562,7 @@ select option{background:#0d1f38;color:#e2e8f0;}
     <div class="planet-body">
       <div class="planet-tab-pane active" id="pane-view3d" style="flex:1;display:flex;">
         <div class="planet-canvas-col" style="flex:1;">
+          <button class="fs-btn" id="fs-btn" onclick="toggleFullscreen()" title="Fullscreen">⛶</button>
           <canvas id="planet-canvas-3d"></canvas>
           <div class="drag-hint">drag to rotate</div>
           <div class="canvas-actions" id="canvas-actions" style="display:none;">
@@ -1129,6 +1132,7 @@ function buildPlanet(a){
     const qualBadge=`<div style="font-size:.68rem;font-family:'Orbitron',monospace;letter-spacing:.1em;text-transform:uppercase;padding:.25rem .75rem;border-radius:999px;margin-bottom:.6rem;display:inline-block;background:rgba(52,211,153,.1);color:#6ee7b7;border:1px solid rgba(52,211,153,.25);">✦ Babylon.js · PBR · GlowLayer</div>`;
     col.innerHTML=qualBadge+buildInfo(a,st);
     const ca=document.getElementById('canvas-actions');if(ca)ca.style.display='flex';
+    const fsb=document.getElementById('fs-btn');if(fsb)fsb.style.display='flex';
 
     // Moons
     const _moonMeshes=[];
@@ -1187,6 +1191,25 @@ function savePlanetSnapshot(){
   a.download=name+'-planet.png';
   a.click();
 }
+
+/* ── FULLSCREEN ── */
+function toggleFullscreen(){
+  const canvas=document.getElementById('planet-canvas-3d');
+  if(!canvas)return;
+  if(!document.fullscreenElement&&!document.webkitFullscreenElement){
+    (canvas.requestFullscreen||canvas.webkitRequestFullscreen).call(canvas);
+  } else {
+    (document.exitFullscreen||document.webkitExitFullscreen).call(document);
+  }
+}
+document.addEventListener('fullscreenchange',function(){
+  const btn=document.getElementById('fs-btn');
+  if(btn)btn.textContent=document.fullscreenElement?'✕':'⛶';
+});
+document.addEventListener('webkitfullscreenchange',function(){
+  const btn=document.getElementById('fs-btn');
+  if(btn)btn.textContent=document.webkitFullscreenElement?'✕':'⛶';
+});
 
 /* ── GENERATE ── */
 function generate(){
