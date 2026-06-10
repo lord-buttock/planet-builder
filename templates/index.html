@@ -238,6 +238,8 @@ select option{background:#0d1f38;color:#e2e8f0;}
 .earth-compare-row:last-child{border-bottom:none;}
 .earth-compare-label{color:#475569;}
 .earth-compare-val{color:#7dd3fc;font-weight:700;}
+#pp-print-overlay{display:none;}
+@media print{body>*{display:none!important;}#pp-print-overlay{display:block!important;background:white;color:#111;padding:2rem;font-family:'Nunito',sans-serif;}}
 </style>
 </head>
 <body>
@@ -1578,83 +1580,37 @@ function printPassport(){
   const type=(a.type||'unknown').replace(/\b\w/g,c=>c.toUpperCase());
   const lifeLabel=a.lifeType&&a.lifeType!=='none'?a.lifeType.replace(/\b\w/g,c=>c.toUpperCase()):'No Life';
   const civLabel=a.civLevel&&a.civLevel!=='none'?a.civLevel.replace(/\b\w/g,c=>c.toUpperCase()):'';
-  const features=[...(a.terrain||[]),(a.special?'Special: '+a.special:''),(a.extreme||[])].filter(Boolean).slice(0,5);
-  const promptExcerpt=_lastImgPrompt?_lastImgPrompt.split('.').slice(0,2).join('.')+'.'
-:'';
-  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${nm} — Planet Passport</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-<style>
-*{box-sizing:border-box;margin:0;padding:0;}
-body{background:#050b18;color:#e2e8f0;font-family:'Nunito',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem;}
-.passport{width:420px;background:rgba(10,22,44,0.98);border:2px solid rgba(125,211,252,0.3);border-radius:24px;overflow:hidden;box-shadow:0 0 60px rgba(125,211,252,0.08);}
-.pp-header{background:linear-gradient(135deg,#0f172a,#1e1b4b);padding:1.5rem 1.75rem 1.2rem;border-bottom:1px solid rgba(125,211,252,0.15);position:relative;}
-.pp-header::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#7dd3fc,#a78bfa,#34d399);}
-.pp-label{font-size:0.6rem;letter-spacing:0.2em;color:#475569;text-transform:uppercase;font-family:'Orbitron',monospace;margin-bottom:0.4rem;}
-.pp-name{font-family:'Orbitron',monospace;font-size:1.6rem;font-weight:900;background:linear-gradient(120deg,#7dd3fc,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.2;margin-bottom:0.6rem;}
-.pp-badges{display:flex;flex-wrap:wrap;gap:0.35rem;}
-.pp-badge{font-size:0.65rem;font-weight:700;padding:0.2rem 0.65rem;border-radius:999px;letter-spacing:0.04em;}
-.pp-badge-type{background:rgba(167,139,250,0.15);color:#c4b5fd;border:1px solid rgba(167,139,250,0.3);}
-.pp-badge-life{background:rgba(52,211,153,0.12);color:#6ee7b7;border:1px solid rgba(52,211,153,0.25);}
-.pp-badge-civ{background:rgba(251,191,36,0.12);color:#fcd34d;border:1px solid rgba(251,191,36,0.25);}
-.pp-body{padding:1.25rem 1.75rem;}
-.pp-section-title{font-size:0.58rem;text-transform:uppercase;letter-spacing:0.14em;color:#334155;margin-bottom:0.6rem;font-family:'Orbitron',monospace;}
-.pp-stats{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:1.2rem;}
-.pp-stat{background:rgba(255,255,255,0.03);border-radius:10px;padding:0.55rem 0.7rem;}
-.pp-stat-label{font-size:0.6rem;text-transform:uppercase;letter-spacing:0.08em;color:#334155;margin-bottom:0.15rem;}
-.pp-stat-value{font-size:0.88rem;font-weight:700;color:#cbd5e1;}
-.pp-features{margin-bottom:1.1rem;}
-.pp-feature{font-size:0.8rem;color:#64748b;padding:0.2rem 0;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;gap:0.5rem;align-items:flex-start;}
-.pp-feature::before{content:'●';color:#7dd3fc;font-size:0.5rem;margin-top:0.35rem;flex-shrink:0;}
-.pp-prompt{font-size:0.75rem;line-height:1.7;color:#475569;font-style:italic;border-left:2px solid rgba(125,211,252,0.2);padding-left:0.75rem;margin-bottom:1rem;}
-.pp-footer{padding:0.7rem 1.75rem;border-top:1px solid rgba(255,255,255,0.05);font-size:0.62rem;color:#1e3a5f;text-align:center;letter-spacing:0.06em;}
-@media print{body{background:white;color:#111;}
-.passport{border-color:#ccc;box-shadow:none;background:white;}
-.pp-header{background:#f8f8ff;}
-.pp-name{-webkit-text-fill-color:#1e1b4b;color:#1e1b4b;}
-.pp-stat{background:#f1f5f9;}
-.pp-stat-value{color:#0f172a;}
-.pp-prompt{color:#475569;}
-.pp-footer{color:#94a3b8;}}
-</style></head><body>
-<div class="passport">
-  <div class="pp-header">
-    <div class="pp-label">Planet Passport</div>
-    <div class="pp-name">${nm}</div>
-    <div class="pp-badges">
-      <span class="pp-badge pp-badge-type">${type}</span>
-      <span class="pp-badge pp-badge-life">${lifeLabel}</span>
-      ${civLabel?`<span class="pp-badge pp-badge-civ">${civLabel} Civ</span>`:''}
+  const features=[];
+  if(a.terrain&&a.terrain.length)a.terrain.slice(0,2).forEach(t=>features.push(t.charAt(0).toUpperCase()+t.slice(1)));
+  if(a.special)features.push(a.special.charAt(0).toUpperCase()+a.special.slice(0,55));
+  if(a.extreme&&a.extreme.length)features.push(a.extreme[0].charAt(0).toUpperCase()+a.extreme[0].slice(1));
+  const promptExcerpt=_lastImgPrompt?_lastImgPrompt.split('.').slice(0,2).join('.')+'.':'';
+  const inner=`
+  <div style="width:100%;max-width:460px;background:#0a162c;border:2px solid rgba(125,211,252,0.3);border-radius:20px;overflow:hidden;font-family:sans-serif;">
+    <div style="background:linear-gradient(135deg,#0f172a,#1e1b4b);padding:1.4rem 1.6rem 1.1rem;border-bottom:1px solid rgba(125,211,252,0.15);position:relative;">
+      <div style="font-size:0.55rem;letter-spacing:0.2em;color:#475569;text-transform:uppercase;margin-bottom:0.35rem;">Planet Passport · Ngarri Primary School</div>
+      <div style="font-size:1.5rem;font-weight:900;color:#7dd3fc;line-height:1.2;margin-bottom:0.55rem;">${nm}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:0.3rem;">
+        <span style="font-size:0.62rem;font-weight:700;padding:0.18rem 0.6rem;border-radius:999px;background:rgba(167,139,250,0.15);color:#c4b5fd;border:1px solid rgba(167,139,250,0.3);">${type}</span>
+        <span style="font-size:0.62rem;font-weight:700;padding:0.18rem 0.6rem;border-radius:999px;background:rgba(52,211,153,0.12);color:#6ee7b7;border:1px solid rgba(52,211,153,0.25);">${lifeLabel}</span>
+        ${civLabel?`<span style="font-size:0.62rem;font-weight:700;padding:0.18rem 0.6rem;border-radius:999px;background:rgba(251,191,36,0.12);color:#fcd34d;border:1px solid rgba(251,191,36,0.25);">${civLabel} Civ</span>`:''}
+      </div>
     </div>
-  </div>
-  <div class="pp-body">
-    <div class="pp-section-title">Planetary Stats</div>
-    <div class="pp-stats">
-      <div class="pp-stat"><div class="pp-stat-label">Diameter</div><div class="pp-stat-value">${st.diam.toLocaleString()} km</div></div>
-      <div class="pp-stat"><div class="pp-stat-label">Gravity</div><div class="pp-stat-value">${st.grav}× Earth</div></div>
-      <div class="pp-stat"><div class="pp-stat-label">Temperature</div><div class="pp-stat-value" style="font-size:0.75rem">${st.tMin}°C – ${st.tMax}°C</div></div>
-      <div class="pp-stat"><div class="pp-stat-label">Day Length</div><div class="pp-stat-value">${st.day} hours</div></div>
-      <div class="pp-stat"><div class="pp-stat-label">Year Length</div><div class="pp-stat-value">${st.year} Earth yrs</div></div>
-      <div class="pp-stat"><div class="pp-stat-label">Moons</div><div class="pp-stat-value">${st.moons} moon${st.moons!==1?'s':''}</div></div>
+    <div style="padding:1.1rem 1.6rem;">
+      <div style="font-size:0.55rem;text-transform:uppercase;letter-spacing:0.14em;color:#334155;margin-bottom:0.5rem;">Planetary Stats</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.45rem;margin-bottom:1.1rem;">
+        ${[['Diameter',st.diam.toLocaleString()+' km'],['Gravity',st.grav+'× Earth'],['Temperature',st.tMin+'°C – '+st.tMax+'°C'],['Day Length',st.day+' hours'],['Year Length',st.year+' Earth yrs'],['Moons',st.moons+' moon'+(st.moons!==1?'s':'')]].map(([l,v])=>`<div style="background:rgba(255,255,255,0.04);border-radius:9px;padding:0.5rem 0.65rem;"><div style="font-size:0.55rem;text-transform:uppercase;letter-spacing:0.07em;color:#334155;margin-bottom:0.12rem;">${l}</div><div style="font-size:0.82rem;font-weight:700;color:#cbd5e1;">${v}</div></div>`).join('')}
+      </div>
+      ${features.length?`<div style="font-size:0.55rem;text-transform:uppercase;letter-spacing:0.14em;color:#334155;margin-bottom:0.5rem;">Key Features</div><div style="margin-bottom:1rem;">${features.map(f=>`<div style="font-size:0.78rem;color:#64748b;padding:0.18rem 0;border-bottom:1px solid rgba(255,255,255,0.04);">● ${f}</div>`).join('')}</div>`:''}
+      ${promptExcerpt?`<div style="font-size:0.55rem;text-transform:uppercase;letter-spacing:0.14em;color:#334155;margin-bottom:0.45rem;">Planet Description</div><div style="font-size:0.73rem;line-height:1.65;color:#475569;font-style:italic;border-left:2px solid rgba(125,211,252,0.2);padding-left:0.7rem;margin-bottom:0.8rem;">${promptExcerpt}</div>`:''}
     </div>
-    ${features.length?`<div class="pp-section-title">Key Features</div><div class="pp-features">${features.map(f=>`<div class="pp-feature">${f.charAt(0).toUpperCase()+f.slice(1)}</div>`).join('')}</div>`:''}
-    ${promptExcerpt?`<div class="pp-section-title">Planet Description</div><div class="pp-prompt">${promptExcerpt}</div>`:''}
-  </div>
-  <div class="pp-footer">NGARRI PRIMARY SCHOOL · BUILT WITH PLANET BUILDER · planet-builder.onrender.com</div>
-</div>
-<div style="text-align:center;margin-top:1.5rem;">
-  <button onclick="window.print()" style="font-family:'Orbitron',monospace;font-size:0.75rem;font-weight:700;letter-spacing:0.1em;padding:0.65rem 1.8rem;border-radius:999px;border:1px solid rgba(125,211,252,0.4);background:rgba(125,211,252,0.1);color:#7dd3fc;cursor:pointer;">🖨 PRINT PASSPORT</button>
-</div>
-</body></html>`;
-  const blob=new Blob([html],{type:'text/html'});
-  const blobUrl=URL.createObjectURL(blob);
-  const w=window.open(blobUrl,'_blank');
-  if(!w){
-    // Popup blocked — download the file instead
-    const lnk=document.createElement('a');lnk.href=blobUrl;
-    lnk.download=(a.name||'planet').toLowerCase().replace(/[^a-z0-9]/g,'-')+'-passport.html';
-    lnk.click();
-  }
-  setTimeout(()=>URL.revokeObjectURL(blobUrl),10000);
+    <div style="padding:0.6rem 1.6rem;border-top:1px solid rgba(255,255,255,0.05);font-size:0.58rem;color:#1e3a5f;text-align:center;letter-spacing:0.06em;">BUILT WITH PLANET BUILDER · planet-builder.onrender.com</div>
+  </div>`;
+  // Inject into page, print, then remove — no popup needed
+  let ov=document.getElementById('pp-print-overlay');
+  if(!ov){ov=document.createElement('div');ov.id='pp-print-overlay';document.body.appendChild(ov);}
+  ov.style.cssText='position:fixed;inset:0;z-index:99999;background:#050b18;display:flex;align-items:center;justify-content:center;padding:2rem;';
+  ov.innerHTML=inner+`<button onclick="document.getElementById('pp-print-overlay').style.display='none'" style="position:fixed;top:1rem;right:1rem;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#94a3b8;border-radius:8px;padding:0.4rem 0.9rem;cursor:pointer;font-size:0.8rem;">✕ Close</button><button onclick="window.print()" style="position:fixed;bottom:1.5rem;right:1.5rem;background:rgba(125,211,252,0.15);border:1px solid rgba(125,211,252,0.4);color:#7dd3fc;border-radius:10px;padding:0.55rem 1.4rem;cursor:pointer;font-size:0.85rem;font-weight:700;">🖨 Print</button>`;
 }
 
 /* ── DECODE STATE FROM URL HASH ── */
