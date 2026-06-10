@@ -532,8 +532,9 @@ select option{background:#0d1f38;color:#e2e8f0;}
       </div>
     </div>
   </div>
-  <div style="text-align:center;margin-top:0.75rem;">
+  <div style="text-align:center;margin-top:0.75rem;display:flex;flex-wrap:wrap;gap:0.5rem;justify-content:center;">
     <button class="copy-btn" id="share-btn" onclick="sharePlanet()" style="background:rgba(167,139,250,0.12);border-color:rgba(167,139,250,0.35);color:#c4b5fd;">🔗 Share Planet</button>
+    <button class="copy-btn" id="passport-btn" onclick="printPassport()" style="background:rgba(52,211,153,0.1);border-color:rgba(52,211,153,0.3);color:#34d399;">🪪 Print Passport</button>
   </div>
   <div class="redo-hint">Want to change something? Scroll back up, update your answers, and click the button again.</div>
 </div>
@@ -647,6 +648,9 @@ document.querySelectorAll('.civ-card').forEach(c=>{const i=c.querySelector('inpu
 function gC(id){return[...document.querySelectorAll('#'+id+' input:checked')].map(i=>i.value).filter(v=>v!=='none');}
 function jL(a){if(!a.length)return'';if(a.length===1)return a[0];return a.slice(0,-1).join(', ')+', and '+a[a.length-1];}
 function mRng(seed){let s=Math.abs(Math.sin(seed+1)*43758.5453)|0;return()=>{s=(s*1664525+1013904223)&0xffffffff;return(s>>>0)/4294967296;};}
+
+/* ── PASSPORT GLOBALS ── */
+let _lastA=null,_lastSt=null,_lastImgPrompt='';
 
 /* ── COLOUR DATA ── */
 const MC={'deep crimson red':[160,30,30],'vivid orange':[220,95,20],'golden yellow':[200,175,40],'lush green':[40,130,50],'ocean blue':[30,90,180],'pale icy white':[210,225,240],'dark ash grey':[70,75,80],'sandy tan-brown':[185,155,90],'vivid purple':[110,40,180],'toxic neon green':[60,200,55],'midnight black':[25,25,35]};
@@ -1398,6 +1402,7 @@ function generate(){
   }
   document.getElementById('result-img-prompt').textContent=parts.join(' ');
   document.getElementById('result-vid-prompt').textContent=vidParts.join(' ');
+  _lastA=a;_lastSt=genStats(a);_lastImgPrompt=parts.join(' ');
   const res=document.getElementById('result');res.classList.add('show');
   const sec=document.getElementById('planet-section');sec.classList.add('show');
   requestAnimationFrame(()=>requestAnimationFrame(()=>sec.classList.add('visible')));
@@ -1460,6 +1465,83 @@ function sharePlanet(){
     btn.textContent='✅ Link copied!';
     setTimeout(()=>{btn.textContent='🔗 Share Planet';},2500);
   });
+}
+
+/* ── PLANET PASSPORT ── */
+function printPassport(){
+  if(!_lastA)return;
+  const a=_lastA,st=_lastSt||genStats(a);
+  const nm=a.name||'Unknown Planet';
+  const type=(a.type||'unknown').replace(/\b\w/g,c=>c.toUpperCase());
+  const lifeLabel=a.lifeType&&a.lifeType!=='none'?a.lifeType.replace(/\b\w/g,c=>c.toUpperCase()):'No Life';
+  const civLabel=a.civLevel&&a.civLevel!=='none'?a.civLevel.replace(/\b\w/g,c=>c.toUpperCase()):'';
+  const features=[...(a.terrain||[]),(a.special?'Special: '+a.special:''),(a.extreme||[])].filter(Boolean).slice(0,5);
+  const promptExcerpt=_lastImgPrompt?_lastImgPrompt.split('.').slice(0,2).join('.')+'.'
+:'';
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${nm} — Planet Passport</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#050b18;color:#e2e8f0;font-family:'Nunito',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem;}
+.passport{width:420px;background:rgba(10,22,44,0.98);border:2px solid rgba(125,211,252,0.3);border-radius:24px;overflow:hidden;box-shadow:0 0 60px rgba(125,211,252,0.08);}
+.pp-header{background:linear-gradient(135deg,#0f172a,#1e1b4b);padding:1.5rem 1.75rem 1.2rem;border-bottom:1px solid rgba(125,211,252,0.15);position:relative;}
+.pp-header::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#7dd3fc,#a78bfa,#34d399);}
+.pp-label{font-size:0.6rem;letter-spacing:0.2em;color:#475569;text-transform:uppercase;font-family:'Orbitron',monospace;margin-bottom:0.4rem;}
+.pp-name{font-family:'Orbitron',monospace;font-size:1.6rem;font-weight:900;background:linear-gradient(120deg,#7dd3fc,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.2;margin-bottom:0.6rem;}
+.pp-badges{display:flex;flex-wrap:wrap;gap:0.35rem;}
+.pp-badge{font-size:0.65rem;font-weight:700;padding:0.2rem 0.65rem;border-radius:999px;letter-spacing:0.04em;}
+.pp-badge-type{background:rgba(167,139,250,0.15);color:#c4b5fd;border:1px solid rgba(167,139,250,0.3);}
+.pp-badge-life{background:rgba(52,211,153,0.12);color:#6ee7b7;border:1px solid rgba(52,211,153,0.25);}
+.pp-badge-civ{background:rgba(251,191,36,0.12);color:#fcd34d;border:1px solid rgba(251,191,36,0.25);}
+.pp-body{padding:1.25rem 1.75rem;}
+.pp-section-title{font-size:0.58rem;text-transform:uppercase;letter-spacing:0.14em;color:#334155;margin-bottom:0.6rem;font-family:'Orbitron',monospace;}
+.pp-stats{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:1.2rem;}
+.pp-stat{background:rgba(255,255,255,0.03);border-radius:10px;padding:0.55rem 0.7rem;}
+.pp-stat-label{font-size:0.6rem;text-transform:uppercase;letter-spacing:0.08em;color:#334155;margin-bottom:0.15rem;}
+.pp-stat-value{font-size:0.88rem;font-weight:700;color:#cbd5e1;}
+.pp-features{margin-bottom:1.1rem;}
+.pp-feature{font-size:0.8rem;color:#64748b;padding:0.2rem 0;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;gap:0.5rem;align-items:flex-start;}
+.pp-feature::before{content:'●';color:#7dd3fc;font-size:0.5rem;margin-top:0.35rem;flex-shrink:0;}
+.pp-prompt{font-size:0.75rem;line-height:1.7;color:#475569;font-style:italic;border-left:2px solid rgba(125,211,252,0.2);padding-left:0.75rem;margin-bottom:1rem;}
+.pp-footer{padding:0.7rem 1.75rem;border-top:1px solid rgba(255,255,255,0.05);font-size:0.62rem;color:#1e3a5f;text-align:center;letter-spacing:0.06em;}
+@media print{body{background:white;color:#111;}
+.passport{border-color:#ccc;box-shadow:none;background:white;}
+.pp-header{background:#f8f8ff;}
+.pp-name{-webkit-text-fill-color:#1e1b4b;color:#1e1b4b;}
+.pp-stat{background:#f1f5f9;}
+.pp-stat-value{color:#0f172a;}
+.pp-prompt{color:#475569;}
+.pp-footer{color:#94a3b8;}}
+</style></head><body>
+<div class="passport">
+  <div class="pp-header">
+    <div class="pp-label">Planet Passport</div>
+    <div class="pp-name">${nm}</div>
+    <div class="pp-badges">
+      <span class="pp-badge pp-badge-type">${type}</span>
+      <span class="pp-badge pp-badge-life">${lifeLabel}</span>
+      ${civLabel?`<span class="pp-badge pp-badge-civ">${civLabel} Civ</span>`:''}
+    </div>
+  </div>
+  <div class="pp-body">
+    <div class="pp-section-title">Planetary Stats</div>
+    <div class="pp-stats">
+      <div class="pp-stat"><div class="pp-stat-label">Diameter</div><div class="pp-stat-value">${st.diam.toLocaleString()} km</div></div>
+      <div class="pp-stat"><div class="pp-stat-label">Gravity</div><div class="pp-stat-value">${st.grav}× Earth</div></div>
+      <div class="pp-stat"><div class="pp-stat-label">Temperature</div><div class="pp-stat-value" style="font-size:0.75rem">${st.tMin}°C – ${st.tMax}°C</div></div>
+      <div class="pp-stat"><div class="pp-stat-label">Day Length</div><div class="pp-stat-value">${st.day} hours</div></div>
+      <div class="pp-stat"><div class="pp-stat-label">Year Length</div><div class="pp-stat-value">${st.year} Earth yrs</div></div>
+      <div class="pp-stat"><div class="pp-stat-label">Moons</div><div class="pp-stat-value">${st.moons} moon${st.moons!==1?'s':''}</div></div>
+    </div>
+    ${features.length?`<div class="pp-section-title">Key Features</div><div class="pp-features">${features.map(f=>`<div class="pp-feature">${f.charAt(0).toUpperCase()+f.slice(1)}</div>`).join('')}</div>`:''}
+    ${promptExcerpt?`<div class="pp-section-title">Planet Description</div><div class="pp-prompt">${promptExcerpt}</div>`:''}
+  </div>
+  <div class="pp-footer">NGARRI PRIMARY SCHOOL · BUILT WITH PLANET BUILDER · planet-builder.onrender.com</div>
+</div>
+<script>window.onload=function(){window.print();}<\/script>
+</body></html>`;
+  const w=window.open('','_blank','width=520,height=780');
+  if(w){w.document.write(html);w.document.close();}
 }
 
 /* ── DECODE STATE FROM URL HASH ── */
