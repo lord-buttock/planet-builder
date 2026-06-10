@@ -944,6 +944,40 @@ function buildPlanet(a){
       fogMesh.material=fogMat;
     }
 
+    // City lights (intelligent civilisation)
+    if(a.lifeType==='intelligent'&&['modern','advanced','unknown'].includes(a.civLevel)){
+      const clW=512,clH=256,clCv=document.createElement('canvas');clCv.width=clW;clCv.height=clH;
+      const clCtx=clCv.getContext('2d');
+      const clSeed=[...(a.name||'x')].reduce((s,c)=>s+c.charCodeAt(0)*7,17)+4444;
+      const crng=mRng(clSeed);
+      const dotCount=a.civLevel==='advanced'?200:a.civLevel==='modern'?80:25;
+      const brt=a.civLevel==='advanced'?0.9:a.civLevel==='modern'?0.7:0.4;
+      for(let i=0;i<dotCount;i++){
+        const cx2=crng()*clW,cy2=crng()*clH,r=a.civLevel==='advanced'?(1.5+crng()*3):(1+crng()*2);
+        const dots=a.civLevel==='advanced'?Math.floor(2+crng()*3):Math.floor(1+crng()*2);
+        for(let d=0;d<dots;d++){
+          const ddx=(crng()-0.5)*r*4,ddy=(crng()-0.5)*r*4;
+          const g=clCtx.createRadialGradient(cx2+ddx,cy2+ddy,0,cx2+ddx,cy2+ddy,r*1.5);
+          g.addColorStop(0,`rgba(255,240,200,${brt})`);g.addColorStop(0.4,`rgba(255,220,160,${brt*0.6})`);g.addColorStop(1,'rgba(0,0,0,0)');
+          clCtx.fillStyle=g;clCtx.fillRect(cx2+ddx-r*2,cy2+ddy-r*2,r*4,r*4);
+        }
+      }
+      if(a.civLevel==='advanced'){
+        const mrng2=mRng(clSeed+1);
+        for(let i=0;i<6;i++){const mx=mrng2()*clW,my=mrng2()*clH,mr=4+mrng2()*6;
+          const mg=clCtx.createRadialGradient(mx,my,0,mx,my,mr);
+          mg.addColorStop(0,'rgba(255,230,180,0.95)');mg.addColorStop(0.5,'rgba(255,200,100,0.6)');mg.addColorStop(1,'rgba(0,0,0,0)');
+          clCtx.fillStyle=mg;clCtx.fillRect(mx-mr,my-mr,mr*2,mr*2);
+        }
+      }
+      const clDT=loadDT(clCv,'citylights');
+      const clMesh=BABYLON.MeshBuilder.CreateSphere("citylights",{diameter:2.006,segments:64},bjsScene);
+      const clMat=new BABYLON.StandardMaterial("clm",bjsScene);
+      clMat.emissiveTexture=clDT;clMat.emissiveTexture.hasAlpha=true;
+      clMat.disableLighting=true;clMat.backFaceCulling=false;
+      clMesh.material=clMat;glowLayer.addIncludedOnlyMesh(clMesh);
+    }
+
     // Rings
     if(a.extreme&&a.extreme.includes('enormous planetary rings')){
       const rDT=new BABYLON.DynamicTexture("rings",{width:256,height:256},bjsScene,true);
