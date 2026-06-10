@@ -616,7 +616,7 @@ function _tri(nx,ny,nz,sc,s,o){const wx=Math.pow(Math.abs(nx),6),wy=Math.pow(Mat
 
 /* ── TEXTURE GENERATION ── */
 function genPlanetTex(a){
-  const W=512,H=256,PI=Math.PI,seed=42;
+  const W=512,H=256,PI=Math.PI,seed=[...(a.name||'x')].reduce((s,c)=>s+c.charCodeAt(0)*7,17);
   const type=a.type||'rocky';
   const ramp=RAMPS[type]||RAMPS['rocky'];
   const mc=MC[a.mainColour];
@@ -970,6 +970,7 @@ function buildPlanet(a){
       const clW=512,clH=256,clCv=document.createElement('canvas');clCv.width=clW;clCv.height=clH;
       const clCtx=clCv.getContext('2d');
       const clSeed=[...(a.name||'x')].reduce((s,c)=>s+c.charCodeAt(0)*7,17)+4444;
+      const _clPSeed=clSeed-4444;
       const crng=mRng(clSeed);
       const target=a.civLevel==='advanced'?450:a.civLevel==='modern'?180:45;
       const brt=a.civLevel==='advanced'?0.95:a.civLevel==='modern'?0.75:0.55;
@@ -981,8 +982,8 @@ function buildPlanet(a){
         const lat=v*_PI,lon=u*_PI*2;
         const sl2=Math.sin(lat),cl2=Math.cos(lat);
         const nx2=sl2*Math.cos(lon),ny2=cl2,nz2=sl2*Math.sin(lon);
-        // Land detection via same noise as planet texture (seed 42)
-        const h2=_tri(nx2,ny2,nz2,2.2,42,6)*0.62+_tri(nx2,ny2,nz2,9,75,5)*0.26+_tri(nx2,ny2,nz2,22,119,4)*0.12;
+        // Land detection via same noise as planet texture (name-derived seed)
+        const h2=_tri(nx2,ny2,nz2,2.2,_clPSeed,6)*0.62+_tri(nx2,ny2,nz2,9,_clPSeed+33,5)*0.26+_tri(nx2,ny2,nz2,22,_clPSeed+77,4)*0.12;
         if(h2<0.40)continue;
         const px2=u*clW,py2=v*clH;
         const g=clCtx.createRadialGradient(px2,py2,0,px2,py2,dotR*2.2);
@@ -998,7 +999,7 @@ function buildPlanet(a){
           const lat=v*_PI,lon=u*_PI*2;
           const sl2=Math.sin(lat),cl2=Math.cos(lat);
           const nx2=sl2*Math.cos(lon),ny2=cl2,nz2=sl2*Math.sin(lon);
-          const h2=_tri(nx2,ny2,nz2,2.2,42,6)*0.62+_tri(nx2,ny2,nz2,9,75,5)*0.26+_tri(nx2,ny2,nz2,22,119,4)*0.12;
+          const h2=_tri(nx2,ny2,nz2,2.2,_clPSeed,6)*0.62+_tri(nx2,ny2,nz2,9,_clPSeed+33,5)*0.26+_tri(nx2,ny2,nz2,22,_clPSeed+77,4)*0.12;
           if(h2<0.40)continue;
           const px2=u*clW,py2=v*clH,mr=2.5+mrng2()*3;
           const mg=clCtx.createRadialGradient(px2,py2,0,px2,py2,mr);
