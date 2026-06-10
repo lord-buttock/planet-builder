@@ -926,7 +926,7 @@ function buildPlanet(a){
     }
     // Volcanic smoke
     if(a.atmo&&a.atmo.includes('volcanic ash and smoke rising from eruptions')&&(a.terrain&&a.terrain.includes('towering active volcanoes')||a.type==='volcanic / lava')){
-      const smCv=genCloudTex(seed+777);
+      const smCv=genCloudTex(819);
       const smCtx=smCv.getContext('2d');
       smCtx.globalCompositeOperation='source-atop';smCtx.fillStyle='rgba(35,25,15,0.82)';smCtx.fillRect(0,0,smCv.width,smCv.height);smCtx.globalCompositeOperation='source-over';
       const smDT=loadDT(smCv,'smoke');
