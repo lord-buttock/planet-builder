@@ -1125,7 +1125,7 @@ function generate(){
     if(a.camView==='surface'){
       // Ground-level camera pan
       const feature=a.focusFeature||'the alien landscape';
-      parts.push(`A short cinematic video clip shot on the surface of alien planet ${pN}. The camera begins still, then slowly and smoothly pans from left to right, gradually revealing the dramatic alien landscape ahead.`);
+      parts.push(`A short cinematic video clip shot on the surface of alien planet ${pN}. The camera begins still, then slowly and smoothly pans from left to right, moving forwards, gradually revealing the dramatic alien landscape ahead.`);
       if(a.focusFeature) parts.push(`The camera is facing ${a.focusFeature}, slowly sweeping across to reveal its full scale.`);
       // Environment
       const gr=[];if(a.mainColour)gr.push(a.mainColour);if(a.type)gr.push(a.type);
