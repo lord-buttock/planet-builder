@@ -845,13 +845,34 @@ function buildPlanet(a){
     sCtx.fillStyle=sg;sCtx.fillRect(0,0,16,16);
     const starDT=new BABYLON.DynamicTexture("st",{width:16,height:16},bjsScene,false);
     starDT.getContext().drawImage(sCv,0,0);starDT.update();
-    const sPS=new BABYLON.ParticleSystem("stars",1500,bjsScene);
+    const _spT=a.space||'';
+    const _sC=_spT.includes('nebula')?{c1:[.8,.5,1,1],c2:[.5,.9,1,.7],n:1500,mn:.05,mx:.14}:
+               _spT.includes('galaxy')?{c1:[1,.98,.85,1],c2:[1,.92,.7,.8],n:1800,mn:.05,mx:.16}:
+               _spT.includes('dusty')?{c1:[.9,.85,.7,.7],c2:[.85,.78,.6,.5],n:900,mn:.06,mx:.13}:
+               _spT.includes('cluster')?{c1:[.9,.95,1,1],c2:[.8,.88,1,.9],n:2500,mn:.04,mx:.10}:
+               {c1:[1,1,1,1],c2:[.8,.88,1,.7],n:1500,mn:.05,mx:.14};
+    const sPS=new BABYLON.ParticleSystem("stars",_sC.n,bjsScene);
     sPS.particleTexture=starDT;sPS.emitter=BABYLON.Vector3.Zero();
     sPS.minEmitBox=new BABYLON.Vector3(-45,-45,-45);sPS.maxEmitBox=new BABYLON.Vector3(45,45,45);
-    sPS.color1=new BABYLON.Color4(1,1,1,1);sPS.color2=new BABYLON.Color4(.8,.88,1,.7);
-    sPS.minSize=0.05;sPS.maxSize=0.14;sPS.minLifeTime=9999;sPS.maxLifeTime=9999;
-    sPS.emitRate=1500;sPS.gravity=BABYLON.Vector3.Zero();sPS.direction1=BABYLON.Vector3.Zero();sPS.direction2=BABYLON.Vector3.Zero();
+    sPS.color1=new BABYLON.Color4(..._sC.c1);sPS.color2=new BABYLON.Color4(..._sC.c2);
+    sPS.minSize=_sC.mn;sPS.maxSize=_sC.mx;sPS.minLifeTime=9999;sPS.maxLifeTime=9999;
+    sPS.emitRate=_sC.n;sPS.gravity=BABYLON.Vector3.Zero();sPS.direction1=BABYLON.Vector3.Zero();sPS.direction2=BABYLON.Vector3.Zero();
     sPS.minEmitPower=0;sPS.maxEmitPower=0;sPS.start();
+    // Nebula background sphere
+    if(_spT.includes('nebula')){
+      const nbCv=document.createElement('canvas');nbCv.width=512;nbCv.height=256;
+      const nbCtx=nbCv.getContext('2d');
+      [[420,80,220,'rgba(140,60,200,0.18)','rgba(60,20,120,0)'],[80,180,180,'rgba(40,160,200,0.15)','rgba(0,60,120,0)'],[350,200,100,'rgba(200,40,80,0.12)','rgba(80,0,40,0)'],[200,100,220,'rgba(60,200,180,0.10)','rgba(0,80,60,0)']].forEach(([cx,cy,r,c1,c2])=>{
+        const g=nbCtx.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,c1);g.addColorStop(1,c2);
+        nbCtx.fillStyle=g;nbCtx.fillRect(0,0,512,256);
+      });
+      const nbDT=new BABYLON.DynamicTexture("neb",{width:512,height:256},bjsScene,true);
+      nbDT.getContext().drawImage(nbCv,0,0);nbDT.update();
+      const nbMesh=BABYLON.MeshBuilder.CreateSphere("nebula",{diameter:200,segments:12},bjsScene);
+      const nbMat=new BABYLON.StandardMaterial("nbm",bjsScene);
+      nbMat.emissiveTexture=nbDT;nbMat.emissiveIntensity=0.08;nbMat.backFaceCulling=false;nbMat.disableLighting=true;
+      nbMesh.material=nbMat;
+    }
 
     // Glow layer
     const glowLayer=new BABYLON.GlowLayer("glow",bjsScene);
