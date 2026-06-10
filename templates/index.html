@@ -229,6 +229,9 @@ select option{background:#0d1f38;color:#e2e8f0;}
 .canvas-btn:hover{border-color:rgba(125,211,252,0.4);color:#7dd3fc;}
 .fs-btn{position:absolute;top:10px;right:10px;z-index:10;width:32px;height:32px;border-radius:8px;background:rgba(10,22,44,0.75);border:1px solid rgba(125,211,252,0.2);color:#7dd3fc;font-size:1rem;cursor:pointer;display:none;align-items:center;justify-content:center;transition:all 0.2s;backdrop-filter:blur(4px);}
 .fs-btn:hover{background:rgba(10,22,44,0.95);border-color:rgba(125,211,252,0.5);}
+[data-tip]{position:relative;cursor:help;}
+[data-tip]::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:rgba(5,15,35,0.97);border:1px solid rgba(125,211,252,0.2);color:#cbd5e1;font-size:0.75rem;font-weight:600;font-family:'Nunito',sans-serif;line-height:1.5;padding:0.45rem 0.75rem;border-radius:8px;white-space:normal;width:220px;z-index:300;opacity:0;pointer-events:none;transition:opacity 0.15s;text-transform:none;letter-spacing:0;}
+[data-tip]:hover::after{opacity:1;}
 </style>
 </head>
 <body>
@@ -252,13 +255,14 @@ select option{background:#0d1f38;color:#e2e8f0;}
       <button class="suggest-btn" onclick="suggestName()">✨ Suggest</button>
     </div>
     <datalist id="dl-names"><option value="Zorblax"><option value="Nebula Prime"><option value="Igneus"><option value="Glacius"><option value="Aquaris"><option value="Terra Nova"><option value="Umbris"><option value="Pyraxis"></datalist></div>
-  <div class="q"><label class="qlabel">What type of planet is it?</label>
+  <div class="q"><label class="qlabel" data-tip="This shapes the colour, terrain and atmosphere of your 3D planet">What type of planet is it?</label>
     <select id="q-type"><option value="">Choose a type...</option>
       <option value="rocky">🪨 Rocky</option><option value="watery / ocean">🌊 Watery / Ocean</option>
       <option value="icy">🧊 Icy</option><option value="volcanic / lava">🌋 Volcanic / Lava</option>
       <option value="desert / sandy">🏜️ Desert / Sandy</option><option value="forest / jungle">🌿 Forest / Jungle</option>
       <option value="gas giant">💨 Gas Giant</option><option value="toxic / acid">☠️ Toxic / Acid</option>
-      <option value="crystal">💎 Crystal</option></select></div>
+      <option value="crystal">💎 Crystal</option></select>
+    <div style="font-size:0.78rem;color:#475569;margin-top:0.4rem;">💡 Gas giants are huge planets made mostly of swirling gas, like Jupiter. Crystal planets are covered in giant mineral formations.</div></div>
   <div class="q"><label class="qlabel">Is your planet safe for life?</label>
     <select id="q-life"><option value="">Choose an answer...</option>
       <option value="habitable, capable of supporting alien life">✅ Yes — it has alien life</option>
@@ -280,7 +284,7 @@ select option{background:#0d1f38;color:#e2e8f0;}
   <div class="q"><label class="qlabel">What other colours can be seen on the surface?</label>
     <input type="text" id="q-other-colours" placeholder="e.g. glowing green cracks, dark brown rock..." list="dl-colours">
     <datalist id="dl-colours"><option value="glowing green rivers and cracks"><option value="bright orange lava flows"><option value="icy white polar caps"><option value="dark brown exposed rock"><option value="deep blue frozen oceans"><option value="purple sulphur deposits"></datalist></div>
-  <div class="q"><label class="qlabel">What covers most of the surface? (pick all that apply)</label>
+  <div class="q"><label class="qlabel" data-tip="Tick everything that covers large areas of your planet — you can pick several">What covers most of the surface? (pick all that apply)</label>
     <div class="pill-grid" id="pg-surface">
       <label class="pill"><input type="checkbox" value="lava flows"><span class="dot"></span>🌋 Lava flows</label>
       <label class="pill"><input type="checkbox" value="deep oceans"><span class="dot"></span>🌊 Deep oceans</label>
@@ -306,7 +310,7 @@ select option{background:#0d1f38;color:#e2e8f0;}
       <label class="pill"><input type="checkbox" value="massive glaciers"><span class="dot"></span>🧊 Glaciers</label>
       <label class="pill"><input type="checkbox" value="winding rivers"><span class="dot"></span>〰️ Rivers</label>
     </div></div>
-  <div class="q"><label class="qlabel">Are there any extreme features? (pick all that apply)</label>
+  <div class="q"><label class="qlabel" data-tip="Pick any dramatic large-scale features — these appear on your 3D planet">Are there any extreme features? (pick all that apply)</label>
     <div class="pill-grid" id="pg-extreme">
       <label class="pill"><input type="checkbox" value="a massive permanent storm system"><span class="dot"></span>🌪️ Giant storm</label>
       <label class="pill"><input type="checkbox" value="glowing land masses visible from space"><span class="dot"></span>✨ Glowing land</label>
@@ -340,19 +344,19 @@ select option{background:#0d1f38;color:#e2e8f0;}
       <option value="dramatic swirling storm clouds">🌩️ Dramatic storm clouds</option>
       <option value="strange colourful alien clouds in unusual hues">🌈 Strange colourful clouds</option>
       <option value="no cloud cover at all">☀️ No clouds — clear surface visible</option></select></div>
-  <div class="q"><label class="qlabel">Is there fog, smoke, mist, or anything else?</label>
+  <div class="q"><label class="qlabel" data-tip="The atmosphere is the layer of gas around your planet">Is there fog, smoke, mist, or anything else?</label>
     <div class="pill-grid" id="pg-atmo">
-      <label class="pill"><input type="checkbox" value="volcanic ash and smoke rising from eruptions"><span class="dot"></span>🌫️ Volcanic smoke</label>
+      <label class="pill" data-tip="Dark smoky clouds rising from erupting volcanoes"><input type="checkbox" value="volcanic ash and smoke rising from eruptions"><span class="dot"></span>🌫️ Volcanic smoke</label>
       <label class="pill"><input type="checkbox" value="thick ground-level fog"><span class="dot"></span>🌁 Thick fog</label>
-      <label class="pill"><input type="checkbox" value="a shimmering aurora of light curtains in the upper atmosphere"><span class="dot"></span>🌌 Aurora</label>
-      <label class="pill"><input type="checkbox" value="a coloured atmospheric haze"><span class="dot"></span>🎆 Coloured haze</label>
+      <label class="pill" data-tip="Like the Northern Lights — glowing coloured ribbons near the poles"><input type="checkbox" value="a shimmering aurora of light curtains in the upper atmosphere"><span class="dot"></span>🌌 Aurora</label>
+      <label class="pill" data-tip="A tinted glow layer that changes the colour of your sky"><input type="checkbox" value="a coloured atmospheric haze"><span class="dot"></span>🎆 Coloured haze</label>
       <label class="pill"><input type="checkbox" value="none"><span class="dot"></span>❌ None</label>
     </div></div>
 </div>
 
 <div class="card t-indigo">
   <div class="card-head"><div class="card-icon">🌌</div><div><div class="card-title">6 — Space Setting</div><div class="card-sub">What is the space around your planet like?</div></div></div>
-  <div class="q"><label class="qlabel">What does the space behind your planet look like?</label>
+  <div class="q"><label class="qlabel" data-tip="This changes the star field and background behind your 3D planet">What does the space behind your planet look like?</label>
     <select id="q-space"><option value="">Choose an option...</option>
       <option value="against a deep black sky filled with thousands of stars">⭐ Deep black with stars</option>
       <option value="against a vivid swirling colourful nebula">🌈 Vivid colourful nebula</option>
@@ -370,7 +374,7 @@ select option{background:#0d1f38;color:#e2e8f0;}
 
 <div class="card t-amber">
   <div class="card-head"><div class="card-icon">💡</div><div><div class="card-title">7 — Lighting</div><div class="card-sub">How is your planet lit?</div></div></div>
-  <div class="q"><label class="qlabel">How bright is your planet?</label>
+  <div class="q"><label class="qlabel" data-tip="This changes the sun's brightness and direction on your 3D planet">How bright is your planet?</label>
     <select id="q-light"><option value="">Choose an option...</option>
       <option value="brightly and evenly lit across most of its surface">☀️ Brightly lit</option>
       <option value="dramatically lit — one side fully illuminated, the other in deep shadow">🌓 Half lit, half in shadow</option>
