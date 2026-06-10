@@ -212,6 +212,10 @@ select option{background:#0d1f38;color:#e2e8f0;}
 .features-list{display:flex;flex-direction:column;gap:0.38rem;}
 .feature-item{display:flex;align-items:flex-start;gap:0.5rem;font-size:0.82rem;color:#64748b;line-height:1.45;}
 .feature-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:0.45rem;}
+.name-row{display:flex;gap:0.5rem;align-items:center;}
+.name-row input{flex:1;}
+.suggest-btn{flex-shrink:0;padding:0.65rem 1rem;background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.3);border-radius:10px;color:#c4b5fd;font-family:'Nunito',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all 0.2s;}
+.suggest-btn:hover{background:rgba(167,139,250,0.22);border-color:rgba(167,139,250,0.5);}
 </style>
 </head>
 <body>
@@ -229,7 +233,10 @@ select option{background:#0d1f38;color:#e2e8f0;}
 <div class="card t-blue">
   <div class="card-head"><div class="card-icon">🌍</div><div><div class="card-title">1 — Basic Planet Identity</div><div class="card-sub">Tell us the basics about your planet</div></div></div>
   <div class="q"><label class="qlabel">What is your planet called?</label>
-    <input type="text" id="q-name" placeholder="e.g. Zorblax, Nebula Prime, Glacius..." list="dl-names">
+    <div class="name-row">
+      <input type="text" id="q-name" placeholder="e.g. Zorblax, Nebula Prime, Glacius..." list="dl-names">
+      <button class="suggest-btn" onclick="suggestName()">✨ Suggest</button>
+    </div>
     <datalist id="dl-names"><option value="Zorblax"><option value="Nebula Prime"><option value="Igneus"><option value="Glacius"><option value="Aquaris"><option value="Terra Nova"><option value="Umbris"><option value="Pyraxis"></datalist></div>
   <div class="q"><label class="qlabel">What type of planet is it?</label>
     <select id="q-type"><option value="">Choose a type...</option>
@@ -568,6 +575,15 @@ function bgR(){bW=bgC.width=innerWidth;bH=bgC.height=innerHeight;}
 bgR();addEventListener('resize',bgR);
 for(let i=0;i<350;i++)bS.push({x:Math.random(),y:Math.random(),r:.2+Math.random()*1.6,o:Math.random(),d:(Math.random()-.5)*.008});
 (function bF(){bgX.clearRect(0,0,bW,bH);bS.forEach(p=>{p.o=Math.max(.1,Math.min(.95,p.o+p.d));if(p.o<=.1||p.o>=.95)p.d*=-1;bgX.beginPath();bgX.arc(p.x*bW,p.y*bH,p.r,0,Math.PI*2);bgX.fillStyle=`rgba(255,255,255,${p.o})`;bgX.fill();});requestAnimationFrame(bF);})();
+
+/* ── PLANET NAME SUGGESTER ── */
+function suggestName(){
+  const pre=['Zor','Neb','Keth','Vel','Ignu','Aru','Xen','Lyr','Pyx','Thar','Omn','Drev','Vor','Sel','Kryn','Aqu','Sol','Myr','Eld','Cael','Veth','Ryn','Phyr','Ost','Brax'];
+  const suf=['ax','us','ix','ara','ion','on','eus','ula','is','or','an','ax','ix','aris','eth','eon','ius','ynth','ael','oth','ax','ira','os','el','yn'];
+  const name=pre[Math.floor(Math.random()*pre.length)]+suf[Math.floor(Math.random()*suf.length)];
+  document.getElementById('q-name').value=name;
+  document.getElementById('q-name').focus();
+}
 
 /* ── PROGRESS BAR ── */
 function uProg(){const f=['q-name','q-type','q-main-colour','q-space','q-light'];let n=f.filter(id=>{const e=document.getElementById(id);return e&&e.value;}).length;const s=document.querySelector('input[name="art-style"]:checked')?1:0;document.getElementById('pbar').style.width=Math.round((n+s)/(f.length+1)*100)+'%';}
