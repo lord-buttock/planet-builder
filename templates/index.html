@@ -971,31 +971,47 @@ function buildPlanet(a){
       const clCtx=clCv.getContext('2d');
       const clSeed=[...(a.name||'x')].reduce((s,c)=>s+c.charCodeAt(0)*7,17)+4444;
       const crng=mRng(clSeed);
-      const dotCount=a.civLevel==='advanced'?200:a.civLevel==='modern'?80:25;
-      const brt=a.civLevel==='advanced'?0.9:a.civLevel==='modern'?0.7:0.4;
-      for(let i=0;i<dotCount;i++){
-        const cx2=crng()*clW,cy2=crng()*clH,r=a.civLevel==='advanced'?(1.5+crng()*3):(1+crng()*2);
-        const dots=a.civLevel==='advanced'?Math.floor(2+crng()*3):Math.floor(1+crng()*2);
-        for(let d=0;d<dots;d++){
-          const ddx=(crng()-0.5)*r*4,ddy=(crng()-0.5)*r*4;
-          const g=clCtx.createRadialGradient(cx2+ddx,cy2+ddy,0,cx2+ddx,cy2+ddy,r*1.5);
-          g.addColorStop(0,`rgba(255,240,200,${brt})`);g.addColorStop(0.4,`rgba(255,220,160,${brt*0.6})`);g.addColorStop(1,'rgba(0,0,0,0)');
-          clCtx.fillStyle=g;clCtx.fillRect(cx2+ddx-r*2,cy2+ddy-r*2,r*4,r*4);
-        }
+      const target=a.civLevel==='advanced'?450:a.civLevel==='modern'?180:45;
+      const brt=a.civLevel==='advanced'?0.95:a.civLevel==='modern'?0.75:0.55;
+      const dotR=a.civLevel==='advanced'?1.1:a.civLevel==='modern'?0.85:0.65;
+      const _PI=Math.PI;
+      let placed=0;
+      for(let attempt=0;attempt<target*12&&placed<target;attempt++){
+        const u=crng(),v=crng();
+        const lat=v*_PI,lon=u*_PI*2;
+        const sl2=Math.sin(lat),cl2=Math.cos(lat);
+        const nx2=sl2*Math.cos(lon),ny2=cl2,nz2=sl2*Math.sin(lon);
+        // Land detection via same noise as planet texture (seed 42)
+        const h2=_tri(nx2,ny2,nz2,2.2,42,6)*0.62+_tri(nx2,ny2,nz2,9,75,5)*0.26+_tri(nx2,ny2,nz2,22,119,4)*0.12;
+        if(h2<0.40)continue;
+        const px2=u*clW,py2=v*clH;
+        const g=clCtx.createRadialGradient(px2,py2,0,px2,py2,dotR*2.2);
+        g.addColorStop(0,`rgba(255,248,180,${brt})`);g.addColorStop(0.5,`rgba(255,225,120,${brt*0.35})`);g.addColorStop(1,'rgba(0,0,0,0)');
+        clCtx.fillStyle=g;clCtx.fillRect(px2-dotR*2.5,py2-dotR*2.5,dotR*5,dotR*5);
+        placed++;
       }
       if(a.civLevel==='advanced'){
         const mrng2=mRng(clSeed+1);
-        for(let i=0;i<6;i++){const mx=mrng2()*clW,my=mrng2()*clH,mr=4+mrng2()*6;
-          const mg=clCtx.createRadialGradient(mx,my,0,mx,my,mr);
-          mg.addColorStop(0,'rgba(255,230,180,0.95)');mg.addColorStop(0.5,'rgba(255,200,100,0.6)');mg.addColorStop(1,'rgba(0,0,0,0)');
-          clCtx.fillStyle=mg;clCtx.fillRect(mx-mr,my-mr,mr*2,mr*2);
+        let meg=0;
+        for(let attempt=0;attempt<40&&meg<4;attempt++){
+          const u=mrng2(),v=mrng2();
+          const lat=v*_PI,lon=u*_PI*2;
+          const sl2=Math.sin(lat),cl2=Math.cos(lat);
+          const nx2=sl2*Math.cos(lon),ny2=cl2,nz2=sl2*Math.sin(lon);
+          const h2=_tri(nx2,ny2,nz2,2.2,42,6)*0.62+_tri(nx2,ny2,nz2,9,75,5)*0.26+_tri(nx2,ny2,nz2,22,119,4)*0.12;
+          if(h2<0.40)continue;
+          const px2=u*clW,py2=v*clH,mr=2.5+mrng2()*3;
+          const mg=clCtx.createRadialGradient(px2,py2,0,px2,py2,mr);
+          mg.addColorStop(0,'rgba(255,240,170,0.9)');mg.addColorStop(0.5,'rgba(255,215,100,0.45)');mg.addColorStop(1,'rgba(0,0,0,0)');
+          clCtx.fillStyle=mg;clCtx.fillRect(px2-mr,py2-mr,mr*2,mr*2);
+          meg++;
         }
       }
       const clDT=loadDT(clCv,'citylights');
       const clMesh=BABYLON.MeshBuilder.CreateSphere("citylights",{diameter:2.006,segments:64},bjsScene);
       const clMat=new BABYLON.StandardMaterial("clm",bjsScene);
       clMat.emissiveTexture=clDT;clMat.emissiveTexture.hasAlpha=true;
-      clMat.disableLighting=true;clMat.backFaceCulling=false;
+      clMat.disableLighting=true;clMat.alphaMode=BABYLON.Engine.ALPHA_ADD;clMat.backFaceCulling=false;
       clMesh.material=clMat;glowLayer.addIncludedOnlyMesh(clMesh);
     }
 
