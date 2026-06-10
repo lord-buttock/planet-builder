@@ -174,7 +174,7 @@ select option{background:#0d1f38;color:#e2e8f0;}
 .planet-header-text p{font-size:0.8rem;color:#334155;margin-top:0.15rem;}
 .planet-body{display:block;min-height:380px;}
 .planet-canvas-col{position:relative;display:flex;align-items:center;justify-content:center;
-  background:transparent;min-height:340px;padding:1rem;min-width:0;}
+  background:transparent;min-height:340px;padding:1rem;min-width:0;overflow:hidden;}
 #planet-canvas-3d{display:block;cursor:grab;border-radius:12px;}
 #planet-canvas-3d:active{cursor:grabbing;}
 .drag-hint{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);
@@ -807,6 +807,7 @@ function buildPlanet(a){
     const colW=rect.width>60?rect.width:window.innerWidth*0.48;
     const SZ=Math.max(220,Math.min(Math.floor(colW)-32,420));
     canvas.width=SZ;canvas.height=SZ;
+    canvas.style.width=SZ+'px';canvas.style.height=SZ+'px';
     if(bjsEngine)bjsEngine.resize();
   }
   _szCanvas();
