@@ -1641,10 +1641,20 @@ body{background:#050b18;color:#e2e8f0;font-family:'Nunito',sans-serif;display:fl
   </div>
   <div class="pp-footer">NGARRI PRIMARY SCHOOL · BUILT WITH PLANET BUILDER · planet-builder.onrender.com</div>
 </div>
-<script>window.onload=function(){window.print();}<\/script>
+<div style="text-align:center;margin-top:1.5rem;">
+  <button onclick="window.print()" style="font-family:'Orbitron',monospace;font-size:0.75rem;font-weight:700;letter-spacing:0.1em;padding:0.65rem 1.8rem;border-radius:999px;border:1px solid rgba(125,211,252,0.4);background:rgba(125,211,252,0.1);color:#7dd3fc;cursor:pointer;">🖨 PRINT PASSPORT</button>
+</div>
 </body></html>`;
-  const w=window.open('','_blank','width=520,height=780');
-  if(w){w.document.write(html);w.document.close();}
+  const blob=new Blob([html],{type:'text/html'});
+  const blobUrl=URL.createObjectURL(blob);
+  const w=window.open(blobUrl,'_blank');
+  if(!w){
+    // Popup blocked — download the file instead
+    const lnk=document.createElement('a');lnk.href=blobUrl;
+    lnk.download=(a.name||'planet').toLowerCase().replace(/[^a-z0-9]/g,'-')+'-passport.html';
+    lnk.click();
+  }
+  setTimeout(()=>URL.revokeObjectURL(blobUrl),10000);
 }
 
 /* ── DECODE STATE FROM URL HASH ── */
