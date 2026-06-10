@@ -995,8 +995,50 @@ function buildPlanet(a){
     const qualBadge=`<div style="font-size:.68rem;font-family:'Orbitron',monospace;letter-spacing:.1em;text-transform:uppercase;padding:.25rem .75rem;border-radius:999px;margin-bottom:.6rem;display:inline-block;background:rgba(52,211,153,.1);color:#6ee7b7;border:1px solid rgba(52,211,153,.25);">✦ Babylon.js · PBR · GlowLayer</div>`;
     col.innerHTML=qualBadge+buildInfo(a,st);
 
+    // Moons
+    const _moonMeshes=[];
+    const _getMoonCfgs=m=>{
+      if(!m||m.includes('alone'))return[];
+      if(m.includes('one large'))return[{r:4.8,d:0.42,spd:0.28,inc:0.22}];
+      if(m.includes('two smaller'))return[{r:4.2,d:0.28,spd:0.35,inc:0.15},{r:5.4,d:0.28,spd:0.20,inc:-0.32}];
+      if(m.includes('several'))return[{r:4.0,d:0.22,spd:0.42,inc:0.18},{r:5.2,d:0.30,spd:0.24,inc:-0.28},{r:6.4,d:0.24,spd:0.16,inc:0.35}];
+      if(m.includes('distant'))return[{r:7.5,d:0.65,spd:0,inc:0.2,static:true}];
+      return[];
+    };
+    const moonCfgs=_getMoonCfgs(a.moons);
+    if(moonCfgs.length){
+      const mTex=genMoonTex(9001);
+      const mrng2=mRng([...(a.name||'x')].reduce((s,c)=>s+c.charCodeAt(0)*7,17)+5555);
+      moonCfgs.forEach((cfg,i)=>{
+        const mMesh=BABYLON.MeshBuilder.CreateSphere(`moon${i}`,{diameter:cfg.d,segments:24},bjsScene);
+        const mMat=new BABYLON.PBRMaterial(`mm${i}`,bjsScene);
+        const mDT=new BABYLON.DynamicTexture(`mdt${i}`,{width:128,height:64},bjsScene,true);
+        mDT.getContext().drawImage(mTex,0,0);mDT.update();
+        mMat.albedoTexture=mDT;mMat.roughness=0.95;mMat.metallic=0;
+        mMesh.material=mMat;
+        const ang0=mrng2()*Math.PI*2;
+        mMesh.position=new BABYLON.Vector3(Math.cos(ang0)*cfg.r,Math.sin(ang0)*cfg.r*Math.sin(cfg.inc),Math.sin(ang0)*cfg.r);
+        _moonMeshes.push({mesh:mMesh,cfg,angle:ang0});
+      });
+      // Distant ringed planet for "several moons" option
+      if(a.moons&&a.moons.includes('several')){
+        const dpM=BABYLON.MeshBuilder.CreateSphere("distplanet",{diameter:0.9,segments:24},bjsScene);
+        const dpMat=new BABYLON.PBRMaterial("dpm",bjsScene);dpMat.albedoColor=new BABYLON.Color3(0.5,0.45,0.6);dpMat.roughness=0.8;dpMat.metallic=0;
+        dpM.material=dpMat;dpM.position=new BABYLON.Vector3(8,1,-4);
+        const drM=BABYLON.MeshBuilder.CreateCylinder("dring",{height:0.008,diameter:1.6,tessellation:40},bjsScene);
+        drM.parent=dpM;drM.rotation.x=Math.PI*0.4;
+        const drMat=new BABYLON.StandardMaterial("drm",bjsScene);drMat.emissiveColor=new BABYLON.Color3(0.3,0.28,0.35);drMat.alpha=0.45;drMat.backFaceCulling=false;
+        drM.material=drMat;
+      }
+    }
+
     // Render loop
-    bjsEngine.runRenderLoop(()=>bjsScene&&bjsScene.render());
+    let _lastT=performance.now();
+    bjsEngine.runRenderLoop(()=>{
+      const now=performance.now(),dt=(now-_lastT)/1000;_lastT=now;
+      _moonMeshes.forEach(m=>{if(!m.cfg.static){m.angle+=m.cfg.spd*dt;m.mesh.position.x=Math.cos(m.angle)*m.cfg.r;m.mesh.position.z=Math.sin(m.angle)*m.cfg.r;m.mesh.position.y=Math.sin(m.angle)*m.cfg.r*Math.sin(m.cfg.inc);}});
+      bjsScene&&bjsScene.render();
+    });
   },60);
 }
 
