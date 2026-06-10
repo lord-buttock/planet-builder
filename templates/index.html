@@ -490,29 +490,6 @@ select option{background:#0d1f38;color:#e2e8f0;}
       </datalist>
     </div></div>
 
-  <div class="q" style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid rgba(255,255,255,0.05);">
-    <label class="qlabel">Will this be an image or a video?</label>
-    <div class="media-grid">
-      <label class="media-card on" id="mc-image">
-        <input type="radio" name="media-type" value="image" checked>
-        <span class="mci">🖼️</span>
-        <div class="mct">Still Image</div>
-        <div class="mcd">A single detailed image — use in Adobe Firefly, Canva AI or Copilot</div>
-      </label>
-      <label class="media-card" id="mc-video">
-        <input type="radio" name="media-type" value="video">
-        <span class="mci">🎬</span>
-        <div class="mct">Video Clip</div>
-        <div class="mcd">A short animated video clip with camera movement instructions</div>
-      </label>
-    </div>
-    <div class="video-extra" id="video-extra">
-
-      <div class="video-note">
-        📌 <strong>Video prompt:</strong> This prompt includes specific camera movement instructions. Copy and paste it into your AI video generator.
-      </div>
-    </div>
-  </div>
 </div>
 
 <div class="card t-green">
@@ -534,13 +511,20 @@ select option{background:#0d1f38;color:#e2e8f0;}
 
 <div class="result" id="result">
   <div class="result-inner">
-    <div class="result-tag" id="result-tag">✦ Your Image Generation Prompt</div>
-    <div class="result-prompt" id="result-prompt"></div>
-    <div class="copy-row">
-      <button class="copy-btn" id="copy-btn" onclick="copyIt()">📋 Copy Prompt</button>
-      <span style="font-size:0.82rem;color:#475569;">Paste this into your AI image generator</span>
+    <div class="result-block" id="result-img-block">
+      <div class="result-tag">🖼️ Image Prompt <span style="font-size:0.7rem;opacity:0.6;font-family:'Nunito',sans-serif;font-weight:600;letter-spacing:0.02em;">— paste into Firefly, Canva AI or Copilot</span></div>
+      <div class="result-prompt" id="result-img-prompt"></div>
+      <div class="copy-row">
+        <button class="copy-btn" id="copy-img-btn" onclick="copyPrompt('result-img-prompt','copy-img-btn')">📋 Copy Image Prompt</button>
+      </div>
     </div>
-    <div class="tips" id="prompt-tips"><p id="tips-text">📌 <strong>Where to use this:</strong> Copy and paste into <strong>Adobe Firefly</strong>, <strong>Microsoft Copilot Designer</strong>, or <strong>Canva AI</strong>.</p></div>
+    <div class="result-block" id="result-vid-block" style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid rgba(52,211,153,0.15);">
+      <div class="result-tag">🎬 Video Prompt <span style="font-size:0.7rem;opacity:0.6;font-family:'Nunito',sans-serif;font-weight:600;letter-spacing:0.02em;">— paste into Canva AI Video, Runway or Kling</span></div>
+      <div class="result-prompt" id="result-vid-prompt"></div>
+      <div class="copy-row">
+        <button class="copy-btn" id="copy-vid-btn" onclick="copyPrompt('result-vid-prompt','copy-vid-btn')">📋 Copy Video Prompt</button>
+      </div>
+    </div>
   </div>
   <div class="redo-hint">Want to change something? Scroll back up, update your answers, and click the button again.</div>
 </div>
@@ -648,7 +632,7 @@ document.querySelectorAll('.style-card').forEach(c=>{const i=c.querySelector('in
 document.querySelectorAll('.view-card').forEach(c=>{const i=c.querySelector('input');c.addEventListener('click',()=>{document.querySelectorAll('.view-card').forEach(x=>x.classList.remove('on'));i.checked=true;c.classList.add('on');document.getElementById('surface-extra').classList.toggle('show',i.value==='surface');});});
 document.querySelectorAll('.life-card').forEach(c=>{const i=c.querySelector('input');c.addEventListener('click',()=>{document.querySelectorAll('.life-card').forEach(x=>x.classList.remove('on'));i.checked=true;c.classList.add('on');document.getElementById('civ-reveal').classList.toggle('show',i.value==='intelligent');});});
 document.querySelectorAll('.civ-card').forEach(c=>{const i=c.querySelector('input');c.addEventListener('click',()=>{document.querySelectorAll('.civ-card').forEach(x=>x.classList.remove('on'));i.checked=true;c.classList.add('on');});});
-document.querySelectorAll('.media-card').forEach(c=>{const i=c.querySelector('input');c.addEventListener('click',()=>{document.querySelectorAll('.media-card').forEach(x=>x.classList.remove('on'));i.checked=true;c.classList.add('on');document.getElementById('video-extra').classList.toggle('show',i.value==='video');});});
+
 
 /* ── HELPERS ── */
 function gC(id){return[...document.querySelectorAll('#'+id+' input:checked')].map(i=>i.value).filter(v=>v!=='none');}
@@ -1239,76 +1223,68 @@ function generate(){
     civLevel:(document.querySelector('input[name="civ-level"]:checked')||{}).value||'',
     creatures:document.getElementById('q-creatures').value.trim(),
     diet:gC('pg-diet'),
-    mediaType:(document.querySelector('input[name="media-type"]:checked')||{}).value||'image',
   };
-  const parts=[];const pN=a.name?`"${a.name}"`:'an alien planet';
-  const isVideo=a.mediaType==='video';
+  const parts=[];const vidParts=[];const pN=a.name?`"${a.name}"`:'an alien planet';
 
-  if(isVideo){
-    // ── VIDEO PROMPT — completely different structure ──
-    if(a.camView==='surface'){
-      // Ground-level camera pan
-      const feature=a.focusFeature||'the alien landscape';
-      parts.push(`A short cinematic video clip shot on the surface of alien planet ${pN}. The camera begins still, then slowly and smoothly pans from left to right, moving forwards, gradually revealing the dramatic alien landscape ahead.`);
-      if(a.focusFeature) parts.push(`The camera is facing ${a.focusFeature}, slowly sweeping across to reveal its full scale.`);
-      // Environment
-      const gr=[];if(a.mainColour)gr.push(a.mainColour);if(a.type)gr.push(a.type);
-      if(gr.length)parts.push(`The terrain is ${gr.join(', and ')}.`);
-      if(a.surface.length)parts.push(`The ground shows ${jL(a.surface)}.`);
-      if(a.terrain.length){const j=jL(a.terrain);parts.push(`${j.charAt(0).toUpperCase()+j.slice(1)} rise dramatically in the distance.`);}
-      if(a.special){let s=`A vivid feature in view is ${a.special}`;if(a.specialColour)s+=`, glowing ${a.specialColour}`;parts.push(s+'.');}
-      // Sky
-      const sky=[];if(a.clouds&&!a.clouds.includes('no cloud'))sky.push(a.clouds);sky.push(...a.atmo);
-      if(sky.length)parts.push(`The sky shows ${jL(sky)}.`);
-      if(a.moons&&!a.moons.includes('alone')){const ms=a.moons.replace('with one large cratered moon visible close by','A large moon is visible in the sky').replace('with two smaller moons orbiting nearby','Two moons hang in the sky above').replace(/with.*/,'Moons are visible overhead');parts.push(ms+'.');}
-      // Life
-      if(a.lifeType==='intelligent'){
-        if(a.creatures)parts.push(`${a.creatures.charAt(0).toUpperCase()+a.creatures.slice(1)} can be seen in the scene.`);
-        if(a.civLevel==='advanced')parts.push(`Futuristic structures and glowing technology are visible across the landscape.`);
-        else if(a.civLevel==='modern')parts.push(`Buildings and structures of a modern civilisation are visible.`);
-        else if(a.civLevel==='ancient')parts.push(`Ancient stone structures and settlements dot the landscape.`);
-      } else if(a.lifeType==='complex-animals'&&a.creatures){
-        parts.push(`${a.creatures.charAt(0).toUpperCase()+a.creatures.slice(1)} move through the scene.`);
-      } else if(['plant-like','simple-animals','complex-animals'].includes(a.lifeType)){
-        parts.push(`Signs of life are visible in the vegetation and movement around the landscape.`);
-      }
-      if(a.light&&a.light.includes('shadow'))parts.push(`Dramatic side lighting casts long shadows across the terrain.`);
-      else if(a.light)parts.push(`Lighting: ${a.light}.`);
-      if(a.glow)parts.push(a.glow);
-      // Camera and video instructions
-      parts.push(`Camera movement: slow, smooth, continuous pan from left to right. No cuts, no jump cuts, no camera shake. The movement is steady and cinematic.`);
-      parts.push(`Style: ${a.artStyle}. Cinematic wide-angle lens. High quality, sharp focus.`);
-
-    } else {
-      // Space view — rotating planet
-      let op=`A short cinematic video of the alien planet ${pN} filmed from space. The planet is centred in frame as a complete sphere`;
-      if(a.space)op+=`, set ${a.space}`;
-      if(a.moons&&!a.moons.includes('alone'))op+=`, with ${a.moons} visible nearby`;
-      parts.push(op+'.');
-      // Planet description
-      const ct=[];if(a.mainColour)ct.push(a.mainColour);if(a.type)ct.push(a.type);
-      if(ct.length){let s=`The planet is ${ct.join(' and ')}`;if(a.otherColours)s+=`, with ${a.otherColours} across the surface`;parts.push(s+'.');}
-      if(a.surface.length)parts.push(`The surface shows ${jL(a.surface)}.`);
-      if(a.terrain.length)parts.push(`The terrain features ${jL(a.terrain)}.`);
-      if(a.extreme.length)parts.push(`Dramatic features include ${jL(a.extreme)}.`);
-      if(a.special){let s=`A vivid feature is ${a.special}`;if(a.specialColour)s+=`, glowing ${a.specialColour} across the surface`;parts.push(s+'.');}
-      let atS='';if(a.clouds)atS=`The atmosphere shows ${a.clouds}`;if(a.atmo.length){const j=jL(a.atmo);atS+=atS?`, with ${j}`:`The atmosphere has ${j}`;}if(atS)parts.push(atS+'.');
-      // Life signs from orbit
-      if(a.lifeType==='intelligent'){
-        if(a.civLevel==='advanced')parts.push(`On the night side, city lights and energy networks blaze across the surface.`);
-        else if(a.civLevel==='modern')parts.push(`On the night side, clusters of city lights are visible.`);
-      } else if(['plant-like','simple-animals','complex-animals'].includes(a.lifeType)){
-        parts.push(`Rich colour variations hint at life on the surface.`);
-      }
-      if(a.light&&a.light.includes('shadow'))parts.push(`Cinematic lighting — one side brightly lit by its sun, the other side softly lit by reflected light, showing surface detail across the whole planet.`);
-      else if(a.light)parts.push(`Lighting: ${a.light}.`);
-      if(a.glow)parts.push(a.glow);
-      // Rotation instructions — the key video element
-      parts.push(`Camera movement: the camera remains completely still and fixed in space. The planet rotates slowly and smoothly from left to right on its axis, making approximately one quarter turn. The rotation is slow, smooth, and continuous — no sudden movements, no camera shake, no cuts.`);
-      parts.push(`Style: ${a.artStyle}. The complete sphere is always visible and centred. Cinematic quality, smooth motion.`);
+  // ── VIDEO PROMPT ──
+  if(a.camView==='surface'){
+    // Ground-level camera pan
+    vidParts.push(`A short cinematic video clip shot on the surface of alien planet ${pN}. The camera begins still, then slowly and smoothly pans from left to right, moving forwards, gradually revealing the dramatic alien landscape ahead.`);
+    if(a.focusFeature) vidParts.push(`The camera is facing ${a.focusFeature}, slowly sweeping across to reveal its full scale.`);
+    // Environment
+    const vgr=[];if(a.mainColour)vgr.push(a.mainColour);if(a.type)vgr.push(a.type);
+    if(vgr.length)vidParts.push(`The terrain is ${vgr.join(', and ')}.`);
+    if(a.surface.length)vidParts.push(`The ground shows ${jL(a.surface)}.`);
+    if(a.terrain.length){const j=jL(a.terrain);vidParts.push(`${j.charAt(0).toUpperCase()+j.slice(1)} rise dramatically in the distance.`);}
+    if(a.special){let s=`A vivid feature in view is ${a.special}`;if(a.specialColour)s+=`, glowing ${a.specialColour}`;vidParts.push(s+'.');}
+    // Sky
+    const vsky=[];if(a.clouds&&!a.clouds.includes('no cloud'))vsky.push(a.clouds);vsky.push(...a.atmo);
+    if(vsky.length)vidParts.push(`The sky shows ${jL(vsky)}.`);
+    if(a.moons&&!a.moons.includes('alone')){const ms=a.moons.replace('with one large cratered moon visible close by','A large moon is visible in the sky').replace('with two smaller moons orbiting nearby','Two moons hang in the sky above').replace(/with.*/,'Moons are visible overhead');vidParts.push(ms+'.');}
+    // Life
+    if(a.lifeType==='intelligent'){
+      if(a.creatures)vidParts.push(`${a.creatures.charAt(0).toUpperCase()+a.creatures.slice(1)} can be seen in the scene.`);
+      if(a.civLevel==='advanced')vidParts.push(`Futuristic structures and glowing technology are visible across the landscape.`);
+      else if(a.civLevel==='modern')vidParts.push(`Buildings and structures of a modern civilisation are visible.`);
+      else if(a.civLevel==='ancient')vidParts.push(`Ancient stone structures and settlements dot the landscape.`);
+    } else if(a.lifeType==='complex-animals'&&a.creatures){
+      vidParts.push(`${a.creatures.charAt(0).toUpperCase()+a.creatures.slice(1)} move through the scene.`);
+    } else if(['plant-like','simple-animals','complex-animals'].includes(a.lifeType)){
+      vidParts.push(`Signs of life are visible in the vegetation and movement around the landscape.`);
     }
+    if(a.light&&a.light.includes('shadow'))vidParts.push(`Dramatic side lighting casts long shadows across the terrain.`);
+    else if(a.light)vidParts.push(`Lighting: ${a.light}.`);
+    if(a.glow)vidParts.push(a.glow);
+    vidParts.push(`Camera movement: slow, smooth, continuous pan from left to right. No cuts, no jump cuts, no camera shake. The movement is steady and cinematic.`);
+    vidParts.push(`Style: ${a.artStyle}. Cinematic wide-angle lens. High quality, sharp focus.`);
+  } else {
+    // Space view — rotating planet
+    let vop=`A short cinematic video of the alien planet ${pN} filmed from space. The planet is centred in frame as a complete sphere`;
+    if(a.space)vop+=`, set ${a.space}`;
+    if(a.moons&&!a.moons.includes('alone'))vop+=`, with ${a.moons} visible nearby`;
+    vidParts.push(vop+'.');
+    const vct=[];if(a.mainColour)vct.push(a.mainColour);if(a.type)vct.push(a.type);
+    if(vct.length){let s=`The planet is ${vct.join(' and ')}`;if(a.otherColours)s+=`, with ${a.otherColours} across the surface`;vidParts.push(s+'.');}
+    if(a.surface.length)vidParts.push(`The surface shows ${jL(a.surface)}.`);
+    if(a.terrain.length)vidParts.push(`The terrain features ${jL(a.terrain)}.`);
+    if(a.extreme.length)vidParts.push(`Dramatic features include ${jL(a.extreme)}.`);
+    if(a.special){let s=`A vivid feature is ${a.special}`;if(a.specialColour)s+=`, glowing ${a.specialColour} across the surface`;vidParts.push(s+'.');}
+    let vatS='';if(a.clouds)vatS=`The atmosphere shows ${a.clouds}`;if(a.atmo.length){const j=jL(a.atmo);vatS+=vatS?`, with ${j}`:`The atmosphere has ${j}`;}if(vatS)vidParts.push(vatS+'.');
+    if(a.lifeType==='intelligent'){
+      if(a.civLevel==='advanced')vidParts.push(`On the night side, city lights and energy networks blaze across the surface.`);
+      else if(a.civLevel==='modern')vidParts.push(`On the night side, clusters of city lights are visible.`);
+    } else if(['plant-like','simple-animals','complex-animals'].includes(a.lifeType)){
+      vidParts.push(`Rich colour variations hint at life on the surface.`);
+    }
+    if(a.light&&a.light.includes('shadow'))vidParts.push(`Cinematic lighting — one side brightly lit by its sun, the other side softly lit by reflected light, showing surface detail across the whole planet.`);
+    else if(a.light)vidParts.push(`Lighting: ${a.light}.`);
+    if(a.glow)vidParts.push(a.glow);
+    vidParts.push(`Camera movement: the camera remains completely still and fixed in space. The planet rotates slowly and smoothly from left to right on its axis, making approximately one quarter turn. The rotation is slow, smooth, and continuous — no sudden movements, no camera shake, no cuts.`);
+    vidParts.push(`Style: ${a.artStyle}. The complete sphere is always visible and centred. Cinematic quality, smooth motion.`);
+  }
 
-  } else if(a.camView==='surface'){
+  // ── IMAGE PROMPT ──
+  if(a.camView==='surface'){
     let op=`A ground-level view standing on the alien surface of ${pN}`;
     if(a.focusFeature)op+=`, looking directly towards ${a.focusFeature}`;
     parts.push(op+'.');
@@ -1405,21 +1381,8 @@ function generate(){
     // Style: clean, no negative restrictions — trust the framing instruction
     parts.push(`Style: ${a.artStyle}. The complete planet sphere must be visible and centred in the frame with space around it. Rich, vivid surface colour and texture. Cinematic composition, 8K resolution, sharp focus, award-winning space art.`);
   }
-  document.getElementById('result-prompt').textContent=parts.join(' ');
-  const viewLabel=a.camView==='surface'?'Surface':'Space';
-  const mediaLabel=a.mediaType==='video'?'Video':'Image';
-  document.getElementById('result-tag').textContent=`✦ Your ${viewLabel} View ${mediaLabel} Prompt`;
-  // Update copy button label for video
-  document.getElementById('copy-btn').textContent=a.mediaType==='video'?'📋 Copy Video Prompt':'📋 Copy Prompt';
-  // Update tips text
-  const tipsEl=document.getElementById('tips-text');
-  if(tipsEl){
-    if(a.mediaType==='video'){
-      tipsEl.innerHTML='📌 <strong>Video prompt ready:</strong> Copy and paste this into your AI video generator. The prompt includes specific camera movement instructions for the animation.';
-    } else {
-      tipsEl.innerHTML='📌 <strong>Where to use this:</strong> Copy and paste into <strong>Adobe Firefly</strong>, <strong>Microsoft Copilot Designer</strong>, or <strong>Canva AI</strong>.';
-    }
-  }
+  document.getElementById('result-img-prompt').textContent=parts.join(' ');
+  document.getElementById('result-vid-prompt').textContent=vidParts.join(' ');
   const res=document.getElementById('result');res.classList.add('show');
   const sec=document.getElementById('planet-section');sec.classList.add('show');
   requestAnimationFrame(()=>requestAnimationFrame(()=>sec.classList.add('visible')));
@@ -1447,11 +1410,13 @@ function switchTab(name){
 }
 
 /* ── COPY ── */
-function copyIt(){
-  const text=document.getElementById('result-prompt').textContent;
-  const btn=document.getElementById('copy-btn');
-  function onSuccess(){btn.textContent='✅ Copied!';btn.classList.add('done');setTimeout(()=>{btn.textContent='📋 Copy Prompt';btn.classList.remove('done');},2500);}
-  // Modern clipboard API (requires HTTPS)
+function copyPrompt(promptId,btnId){
+  const el=document.getElementById(promptId);
+  const btn=document.getElementById(btnId);
+  if(!el||!btn)return;
+  const text=el.textContent;
+  const origLabel=btnId.includes('img')?'📋 Copy Image Prompt':'📋 Copy Video Prompt';
+  function onSuccess(){btn.textContent='✅ Copied!';btn.classList.add('done');setTimeout(()=>{btn.textContent=origLabel;btn.classList.remove('done');},2500);}
   if(navigator.clipboard&&window.isSecureContext){
     navigator.clipboard.writeText(text).then(onSuccess).catch(()=>fallbackCopy(text,onSuccess));
   } else {
