@@ -1585,16 +1585,21 @@ function printPassport(){
   if(a.special)features.push(a.special.charAt(0).toUpperCase()+a.special.slice(0,55));
   if(a.extreme&&a.extreme.length)features.push(a.extreme[0].charAt(0).toUpperCase()+a.extreme[0].slice(1));
   const promptExcerpt=_lastImgPrompt?_lastImgPrompt.split('.').slice(0,2).join('.')+'.':'';
+  const planetCanvas=document.getElementById('planet-canvas-3d');
+  const planetImg=planetCanvas?planetCanvas.toDataURL('image/png'):'';
   const inner=`
   <div style="width:100%;max-width:460px;background:#0a162c;border:2px solid rgba(125,211,252,0.3);border-radius:20px;overflow:hidden;font-family:sans-serif;">
-    <div style="background:linear-gradient(135deg,#0f172a,#1e1b4b);padding:1.4rem 1.6rem 1.1rem;border-bottom:1px solid rgba(125,211,252,0.15);position:relative;">
-      <div style="font-size:0.55rem;letter-spacing:0.2em;color:#475569;text-transform:uppercase;margin-bottom:0.35rem;">Planet Passport · Ngarri Primary School</div>
-      <div style="font-size:1.5rem;font-weight:900;color:#7dd3fc;line-height:1.2;margin-bottom:0.55rem;">${nm}</div>
-      <div style="display:flex;flex-wrap:wrap;gap:0.3rem;">
-        <span style="font-size:0.62rem;font-weight:700;padding:0.18rem 0.6rem;border-radius:999px;background:rgba(167,139,250,0.15);color:#c4b5fd;border:1px solid rgba(167,139,250,0.3);">${type}</span>
-        <span style="font-size:0.62rem;font-weight:700;padding:0.18rem 0.6rem;border-radius:999px;background:rgba(52,211,153,0.12);color:#6ee7b7;border:1px solid rgba(52,211,153,0.25);">${lifeLabel}</span>
-        ${civLabel?`<span style="font-size:0.62rem;font-weight:700;padding:0.18rem 0.6rem;border-radius:999px;background:rgba(251,191,36,0.12);color:#fcd34d;border:1px solid rgba(251,191,36,0.25);">${civLabel} Civ</span>`:''}
+    <div style="background:linear-gradient(135deg,#0f172a,#1e1b4b);padding:1.4rem 1.6rem 1.1rem;border-bottom:1px solid rgba(125,211,252,0.15);position:relative;display:flex;align-items:center;gap:1rem;">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:0.55rem;letter-spacing:0.2em;color:#475569;text-transform:uppercase;margin-bottom:0.35rem;">Planet Passport · Ngarri Primary School</div>
+        <div style="font-size:1.5rem;font-weight:900;color:#7dd3fc;line-height:1.2;margin-bottom:0.55rem;">${nm}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:0.3rem;">
+          <span style="font-size:0.62rem;font-weight:700;padding:0.18rem 0.6rem;border-radius:999px;background:rgba(167,139,250,0.15);color:#c4b5fd;border:1px solid rgba(167,139,250,0.3);">${type}</span>
+          <span style="font-size:0.62rem;font-weight:700;padding:0.18rem 0.6rem;border-radius:999px;background:rgba(52,211,153,0.12);color:#6ee7b7;border:1px solid rgba(52,211,153,0.25);">${lifeLabel}</span>
+          ${civLabel?`<span style="font-size:0.62rem;font-weight:700;padding:0.18rem 0.6rem;border-radius:999px;background:rgba(251,191,36,0.12);color:#fcd34d;border:1px solid rgba(251,191,36,0.25);">${civLabel} Civ</span>`:''}
+        </div>
       </div>
+      ${planetImg?`<img src="${planetImg}" style="width:110px;height:110px;border-radius:50%;border:2px solid rgba(125,211,252,0.25);flex-shrink:0;object-fit:cover;" />`:''}
     </div>
     <div style="padding:1.1rem 1.6rem;">
       <div style="font-size:0.55rem;text-transform:uppercase;letter-spacing:0.14em;color:#334155;margin-bottom:0.5rem;">Planetary Stats</div>
