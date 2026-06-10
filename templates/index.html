@@ -532,6 +532,9 @@ select option{background:#0d1f38;color:#e2e8f0;}
       </div>
     </div>
   </div>
+  <div style="text-align:center;margin-top:0.75rem;">
+    <button class="copy-btn" id="share-btn" onclick="sharePlanet()" style="background:rgba(167,139,250,0.12);border-color:rgba(167,139,250,0.35);color:#c4b5fd;">🔗 Share Planet</button>
+  </div>
   <div class="redo-hint">Want to change something? Scroll back up, update your answers, and click the button again.</div>
 </div>
 
@@ -1401,6 +1404,8 @@ function generate(){
   buildPlanet(a);
   res.scrollIntoView({behavior:'smooth',block:'start'});
   document.getElementById('pbar').style.width='100%';
+  // Encode state in URL hash for sharing
+  try{window.location.hash=btoa(unescape(encodeURIComponent(JSON.stringify(a))));}catch(e){}
 }
 
 /* ── TAB SWITCHING ── */
@@ -1447,6 +1452,59 @@ function fallbackCopy(text,onSuccess){
   } catch(e){}
   document.body.removeChild(ta);
 }
+
+/* ── SHARE PLANET ── */
+function sharePlanet(){
+  const btn=document.getElementById('share-btn');
+  navigator.clipboard.writeText(window.location.href).then(()=>{
+    btn.textContent='✅ Link copied!';
+    setTimeout(()=>{btn.textContent='🔗 Share Planet';},2500);
+  });
+}
+
+/* ── DECODE STATE FROM URL HASH ── */
+function decodeState(){
+  if(!window.location.hash||window.location.hash.length<5)return;
+  try{
+    const a=JSON.parse(decodeURIComponent(escape(atob(window.location.hash.slice(1)))));
+    // Text inputs
+    const textMap={name:'q-name',special:'q-special',specialColour:'q-special-colour',focusFeature:'q-focus-feature',creatures:'q-creatures',otherColours:'q-other-colours'};
+    Object.entries(textMap).forEach(([k,id])=>{const el=document.getElementById(id);if(el&&a[k]!=null)el.value=a[k];});
+    // Select inputs
+    const selMap={type:'q-type',life:'q-life',clouds:'q-clouds',space:'q-space',moons:'q-moons',light:'q-light',glow:'q-glow',mainColour:'q-main-colour'};
+    Object.entries(selMap).forEach(([k,id])=>{const el=document.getElementById(id);if(el&&a[k])el.value=a[k];});
+    // Pill checkboxes (arrays) — keyed by pill-grid id
+    const pillMap={surface:'pg-surface',terrain:'pg-terrain',extreme:'pg-extreme',atmo:'pg-atmo',habFactors:'pg-hab',diet:'pg-diet'};
+    Object.entries(pillMap).forEach(([k,pgId])=>{
+      if(!Array.isArray(a[k]))return;
+      document.querySelectorAll('#'+pgId+' input[type="checkbox"]').forEach(inp=>{
+        const lbl=inp.closest('.pill');
+        if(a[k].includes(inp.value)){inp.checked=true;if(lbl)lbl.classList.add('on');}
+        else{inp.checked=false;if(lbl)lbl.classList.remove('on');}
+      });
+    });
+    // Radio buttons: cam-view, art-style, life-type, civ-level
+    [['camView','cam-view'],['artStyle','art-style'],['lifeType','life-type'],['civLevel','civ-level']].forEach(([k,nm])=>{
+      if(!a[k])return;
+      const inp=document.querySelector('[name="'+nm+'"][value="'+a[k].replace(/"/g,'\\"')+'"]');
+      if(inp){
+        inp.checked=true;
+        // Update visual selected state on parent label
+        const lbl=inp.closest('label');
+        if(lbl){
+          const group=lbl.parentElement;
+          if(group)group.querySelectorAll('label').forEach(l=>l.classList.remove('on'));
+          lbl.classList.add('on');
+        }
+        // Trigger change to show/hide civ-level section etc
+        inp.dispatchEvent(new Event('change',{bubbles:true}));
+      }
+    });
+    // Trigger generate after short delay to allow layout to settle
+    setTimeout(()=>generate(),150);
+  }catch(e){console.warn('Could not decode shared planet:',e);}
+}
+document.addEventListener('DOMContentLoaded',decodeState);
 </script>
 </body>
 </html>
