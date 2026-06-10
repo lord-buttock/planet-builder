@@ -222,10 +222,16 @@ select option{background:#0d1f38;color:#e2e8f0;}
 .launch-spinner{width:48px;height:48px;border-radius:50%;border:3px solid rgba(125,211,252,0.15);border-top-color:#7dd3fc;animation:spin 1s linear infinite;}
 .launch-progress{width:180px;height:2px;background:rgba(125,211,252,0.12);border-radius:2px;overflow:hidden;}
 .launch-progress-fill{height:100%;background:linear-gradient(90deg,#7dd3fc,#a78bfa);border-radius:2px;transition:width 0.4s ease;width:0%;}
+.section-chip{position:fixed;top:12px;right:16px;z-index:200;background:rgba(10,22,44,0.92);border:1px solid rgba(125,211,252,0.2);border-radius:999px;padding:0.3rem 0.85rem;font-size:0.72rem;font-family:'Orbitron',monospace;color:#7dd3fc;letter-spacing:0.08em;opacity:0;transition:opacity 0.3s;pointer-events:none;backdrop-filter:blur(8px);}
+.section-chip.visible{opacity:1;}
+.canvas-actions{display:flex;gap:0.5rem;justify-content:center;margin-top:0.5rem;flex-wrap:wrap;}
+.canvas-btn{display:inline-flex;align-items:center;gap:0.4rem;padding:0.45rem 0.9rem;background:rgba(20,35,60,0.8);border:1px solid rgba(100,116,139,0.3);border-radius:8px;color:#94a3b8;font-family:'Nunito',sans-serif;font-size:0.8rem;font-weight:700;cursor:pointer;transition:all 0.2s;}
+.canvas-btn:hover{border-color:rgba(125,211,252,0.4);color:#7dd3fc;}
 </style>
 </head>
 <body>
 <div class="progress-bar" id="pbar"></div>
+<div class="section-chip" id="section-chip">SECTION 1 / 10</div>
 <canvas id="bg"></canvas>
 <div class="wrap">
 
@@ -556,6 +562,9 @@ select option{background:#0d1f38;color:#e2e8f0;}
         <div class="planet-canvas-col" style="flex:1;">
           <canvas id="planet-canvas-3d"></canvas>
           <div class="drag-hint">drag to rotate</div>
+          <div class="canvas-actions" id="canvas-actions" style="display:none;">
+            <button class="canvas-btn" onclick="savePlanetSnapshot()">📸 Save Image</button>
+          </div>
         </div>
         <div class="planet-info-col" id="planet-info-col"></div>
       </div>
@@ -579,6 +588,31 @@ select option{background:#0d1f38;color:#e2e8f0;}
 </div>
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
 <script>
+/* ── SECTION PROGRESS INDICATOR ── */
+(function(){
+  const cards=document.querySelectorAll('.card');
+  const pbar=document.getElementById('pbar');
+  const chip=document.getElementById('section-chip');
+  if(!cards.length||!pbar)return;
+  let maxSeen=0;
+  const io=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        const idx=Array.from(cards).indexOf(e.target);
+        if(idx>=0&&idx+1>maxSeen){maxSeen=idx+1;}
+        chip.textContent='SECTION '+(idx+1)+' / '+cards.length;
+        chip.classList.add('visible');
+      }
+    });
+    pbar.style.width=(maxSeen/cards.length*100)+'%';
+  },{threshold:0.3});
+  cards.forEach(c=>io.observe(c));
+  // Hide chip when scrolled to very top
+  window.addEventListener('scroll',()=>{
+    if(window.scrollY<80)chip.classList.remove('visible');
+  },{passive:true});
+})();
+
 /* ── BACKGROUND STARS (CSS canvas — unchanged) ── */
 const bgC=document.getElementById('bg'),bgX=bgC.getContext('2d');
 let bW,bH,bS=[];
@@ -1094,6 +1128,7 @@ function buildPlanet(a){
     const st=genStats(a);
     const qualBadge=`<div style="font-size:.68rem;font-family:'Orbitron',monospace;letter-spacing:.1em;text-transform:uppercase;padding:.25rem .75rem;border-radius:999px;margin-bottom:.6rem;display:inline-block;background:rgba(52,211,153,.1);color:#6ee7b7;border:1px solid rgba(52,211,153,.25);">✦ Babylon.js · PBR · GlowLayer</div>`;
     col.innerHTML=qualBadge+buildInfo(a,st);
+    const ca=document.getElementById('canvas-actions');if(ca)ca.style.display='flex';
 
     // Moons
     const _moonMeshes=[];
@@ -1140,6 +1175,17 @@ function buildPlanet(a){
       bjsScene&&bjsScene.render();
     });
   },60);
+}
+
+/* ── SNAPSHOT ── */
+function savePlanetSnapshot(){
+  const canvas=document.getElementById('planet-canvas-3d');
+  if(!canvas)return;
+  const name=(document.getElementById('q-name').value||'my-planet').toLowerCase().replace(/[^a-z0-9]/g,'-');
+  const a=document.createElement('a');
+  a.href=canvas.toDataURL('image/png');
+  a.download=name+'-planet.png';
+  a.click();
 }
 
 /* ── GENERATE ── */
