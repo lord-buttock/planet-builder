@@ -172,7 +172,7 @@ select option{background:#0d1f38;color:#e2e8f0;}
   background:linear-gradient(120deg,#a78bfa,#7dd3fc);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
 .planet-header-text p{font-size:0.8rem;color:#334155;margin-top:0.15rem;}
-.planet-body{display:grid;grid-template-columns:1fr 1fr;min-height:380px;}
+.planet-body{display:block;min-height:380px;}
 .planet-canvas-col{position:relative;display:flex;align-items:center;justify-content:center;
   background:transparent;min-height:340px;padding:1rem;min-width:0;}
 #planet-canvas-3d{display:block;cursor:grab;border-radius:12px;}
@@ -182,7 +182,7 @@ select option{background:#0d1f38;color:#e2e8f0;}
   display:flex;align-items:center;gap:0.5rem;pointer-events:none;white-space:nowrap;}
 .drag-hint::before,.drag-hint::after{content:'';width:18px;height:1px;background:#1e3a5f;}
 .planet-info-col{border-left:1px solid rgba(255,255,255,0.05);padding:1.5rem 1.25rem;
-  display:flex;flex-direction:column;gap:0;overflow-y:auto;min-width:220px;}
+  display:flex;flex-direction:column;gap:0;overflow-y:auto;min-width:220px;flex:0 0 380px;}
 .planet-footer{padding:0.9rem 2rem;border-top:1px solid rgba(255,255,255,0.04);}
 .planet-footer p{font-size:0.76rem;color:#1e3a5f;line-height:1.6;}
 .planet-footer strong{color:#334155;}
