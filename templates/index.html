@@ -1189,14 +1189,82 @@ function buildPlanet(a){
 }
 
 /* ── SNAPSHOT ── */
+function _rrect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();}
 function savePlanetSnapshot(){
   const canvas=document.getElementById('planet-canvas-3d');
   if(!canvas)return;
-  const name=(document.getElementById('q-name').value||'my-planet').toLowerCase().replace(/[^a-z0-9]/g,'-');
-  const a=document.createElement('a');
-  a.href=canvas.toDataURL('image/png');
-  a.download=name+'-planet.png';
-  a.click();
+  const a=_lastA,st=_lastSt||(a?genStats(a):null);
+  const nm=(a&&a.name)||document.getElementById('q-name').value||'My Planet';
+  const slug=nm.toLowerCase().replace(/[^a-z0-9]/g,'-');
+  if(!a||!st){const lnk=document.createElement('a');lnk.href=canvas.toDataURL('image/png');lnk.download=slug+'-planet.png';lnk.click();return;}
+
+  // Build composite: planet canvas left + info panel right
+  const cW=canvas.width,cH=canvas.height; // actual pixel buffer (may be 2x on Retina)
+  const cssW=parseInt(canvas.style.width)||cW; // CSS display size
+  const scale=cW/cssW; // DPR scale factor
+  const panelW=Math.round(380*scale),pad=Math.round(22*scale);
+  const totalW=cW+panelW,totalH=Math.max(cH,Math.round(500*scale));
+  const comp=document.createElement('canvas');comp.width=totalW;comp.height=totalH;
+  const ctx=comp.getContext('2d');
+
+  // Background
+  ctx.fillStyle='#050b18';ctx.fillRect(0,0,totalW,totalH);
+
+  // Planet image centred vertically
+  ctx.drawImage(canvas,0,Math.round((totalH-cH)/2));
+
+  // Subtle divider
+  ctx.strokeStyle='rgba(125,211,252,0.12)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(cW,pad);ctx.lineTo(cW,totalH-pad);ctx.stroke();
+
+  // Info panel
+  const px=cW+pad;let py=Math.round(30*scale);
+  const fs=n=>Math.round(n*scale);
+
+  // Planet name
+  ctx.font=`900 ${fs(22)}px 'Orbitron',monospace`;
+  ctx.fillStyle='#e2e8f0';ctx.fillText(nm,px,py);py+=fs(28);
+
+  // Type + life badges (text only)
+  ctx.font=`700 ${fs(10)}px 'Nunito',sans-serif`;
+  ctx.fillStyle='#c4b5fd';
+  const type=(a.type||'unknown').replace(/\b\w/g,c=>c.toUpperCase());
+  ctx.fillText(type,px,py);
+  if(a.lifeType&&a.lifeType!=='none'){
+    const lifeLabel=a.lifeType.replace(/\b\w/g,c=>c.toUpperCase());
+    const tw=ctx.measureText(type).width;
+    ctx.fillStyle='#6ee7b7';ctx.fillText('  ·  '+lifeLabel,px+tw,py);
+  }
+  py+=fs(24);
+
+  // Stat cards in 2-column grid
+  const statColW=Math.floor((panelW-pad*2-fs(8))/2);
+  const stats=[['DIAMETER',st.diam.toLocaleString()+' km'],['GRAVITY',st.grav+'× Earth'],['TEMPERATURE',st.tMin+'–'+st.tMax+'°C'],['DAY LENGTH',st.day+' hours'],['YEAR LENGTH',st.year+' Earth yrs'],['MOONS',st.moons+' moon'+(st.moons!==1?'s':'')]];
+  const cardH=fs(54),cardGap=fs(8);
+  stats.forEach(([lbl,val],i)=>{
+    const col=i%2,row=Math.floor(i/2);
+    const sx=px+col*(statColW+cardGap),sy=py+row*(cardH+cardGap);
+    ctx.fillStyle='rgba(255,255,255,0.04)';_rrect(ctx,sx,sy,statColW,cardH,fs(8));ctx.fill();
+    ctx.font=`600 ${fs(9)}px 'Nunito',sans-serif`;ctx.fillStyle='#475569';ctx.fillText(lbl,sx+fs(8),sy+fs(16));
+    ctx.font=`700 ${fs(13)}px 'Nunito',sans-serif`;ctx.fillStyle='#cbd5e1';ctx.fillText(val,sx+fs(8),sy+fs(36));
+  });
+  py+=Math.ceil(stats.length/2)*(cardH+cardGap)+fs(14);
+
+  // Key features
+  const feats=[...(a.terrain||[]),...(a.extreme||[]),...(a.surface||[])].slice(0,5);
+  if(feats.length){
+    ctx.font=`600 ${fs(9)}px 'Nunito',sans-serif`;ctx.fillStyle='#334155';ctx.fillText('KEY FEATURES',px,py);py+=fs(16);
+    feats.forEach(f=>{
+      ctx.font=`600 ${fs(11)}px 'Nunito',sans-serif`;ctx.fillStyle='#64748b';
+      ctx.fillText('• '+f.charAt(0).toUpperCase()+f.slice(1),px,py);py+=fs(18);
+    });
+  }
+
+  // Footer credit
+  ctx.font=`600 ${fs(9)}px 'Nunito',sans-serif`;ctx.fillStyle='#1e3a5f';
+  ctx.fillText('Built with Planet Builder · planet-builder.onrender.com',px,totalH-fs(12));
+
+  const lnk=document.createElement('a');lnk.href=comp.toDataURL('image/png');lnk.download=slug+'-planet.png';lnk.click();
 }
 
 /* ── FULLSCREEN ── */
