@@ -14,6 +14,7 @@ A web app for Year 6 students at Ngarri Primary School (Victoria, Australia) to 
 3. Copy the AI **image prompt** → paste into Adobe Firefly or Canva AI to generate a detailed image
 4. Copy the AI **video prompt** → paste into an AI video tool to animate their planet
 5. Compare the AI-generated image with the 3D model
+6. Save a snapshot image, share a link, or print a Planet Passport card
 
 ---
 
@@ -46,7 +47,7 @@ Every form choice drives a visible change in the 3D model:
 - Appears only for intelligent life + modern, advanced, or unknown civilisation level
 - Pinpoint dots placed only on land masses (matching the planet's terrain noise), not over oceans
 - Density and size scale with civilisation level (unknown → sparse dots, modern → clusters, advanced → dense clusters + megacity blobs)
-- Additive transparent sphere — visible only on the dark side, subtle on the lit side
+- Visible on the dark side of the planet, subtle on the lit side
 
 **Moons**
 - One large moon, two smaller moons, several moons + ringed neighbour, or a distant neighbouring planet
@@ -66,10 +67,11 @@ Every form choice drives a visible change in the 3D model:
 
 ### AI Prompt Generation
 
+- Both **image prompt** and **video prompt** are always generated and shown together
 - **Space view image prompt** — full-planet orbital view, emphasises the complete sphere in frame with rich surface detail
 - **Surface view image prompt** — ground-level cinematic scene facing the student's chosen feature, describes terrain, sky, creatures, and civilisation
 - **Space view video prompt** — planet rotates slowly left-to-right
-- **Surface view video prompt** — slow smooth pan across the landscape
+- **Surface view video prompt** — slow smooth camera pan across the landscape, moving forwards
 - Prompts adapt to every form choice including life type, civilisation level, special features, and art style
 
 ### Planet Info Panel
@@ -78,7 +80,19 @@ Every form choice drives a visible change in the 3D model:
 - 6 stat cards: Diameter, Gravity, Temperature, Day Length, Year Length, Moons
 - Stats are seeded from the planet name — same planet always gets the same stats
 - Key Features list
-- "Life on [Planet]" section for planets with living organisms
+- "Life on [Planet]" section for planets with living organisms, including creature description and habitability factors
+- "Compared to Earth" section — size, gravity, and day length comparisons
+
+### UX & Engagement Features
+
+- **Planet name generator** — ✨ Suggest a name button generates random alien planet names from prefix/suffix combinations
+- **Launch sequence animation** — cycling space-themed messages ("Calculating gravitational constant…") while the planet renders
+- **Section progress indicator** — top progress bar + floating "Section X / 10" chip updates as students scroll through the form
+- **Save Image** — captures a composite PNG of the 3D planet + full info panel (stats, life section, Earth comparison)
+- **Fullscreen button** — expands the 3D canvas to fill the screen
+- **Tooltips** — hover hints on complex form terms (gas giant, aurora, atmospheric haze, etc.)
+- **Share Planet** — encodes all form answers into the URL hash; anyone opening the link sees the same planet pre-filled
+- **Planet Passport** — in-page overlay card with planet image, stats, key features, and description; prints cleanly via browser print
 
 ---
 
@@ -108,7 +122,7 @@ planet-builder/
 ├── static/
 │   └── textures/          # Server-generated textures (not committed)
 └── templates/
-    └── index.html         # Entire frontend — HTML + CSS + JavaScript (~1400 lines)
+    └── index.html         # Entire frontend — HTML + CSS + JavaScript (~1600 lines)
 ```
 
 The entire frontend lives in a single `templates/index.html` file. There are no build steps, no bundler, no npm.
