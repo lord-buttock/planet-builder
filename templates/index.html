@@ -1193,115 +1193,154 @@ function buildPlanet(a){
 /* ── SNAPSHOT ── */
 function _rrect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();}
 function savePlanetSnapshot(){
-  const canvas=document.getElementById('planet-canvas-3d');
-  if(!canvas)return;
+  const srcCanvas=document.getElementById('planet-canvas-3d');
+  if(!srcCanvas)return;
   const a=_lastA,st=_lastSt||(a?genStats(a):null);
   const nm=(a&&a.name)||document.getElementById('q-name').value||'My Planet';
   const slug=nm.toLowerCase().replace(/[^a-z0-9]/g,'-');
-  if(!a||!st){const lnk=document.createElement('a');lnk.href=canvas.toDataURL('image/png');lnk.download=slug+'-planet.png';lnk.click();return;}
+  if(!a||!st){const lnk=document.createElement('a');lnk.href=srcCanvas.toDataURL('image/png');lnk.download=slug+'-planet.png';lnk.click();return;}
 
-  // Build composite: planet canvas left + info panel right
-  const cW=canvas.width,cH=canvas.height; // actual pixel buffer (may be 2x on Retina)
-  const cssW=parseInt(canvas.style.width)||cW; // CSS display size
-  const scale=cW/cssW; // DPR scale factor
-  const panelW=Math.round(380*scale),pad=Math.round(22*scale);
-  const totalW=cW+panelW,totalH=Math.max(cH,Math.round(680*scale));
-  const comp=document.createElement('canvas');comp.width=totalW;comp.height=totalH;
-  const ctx=comp.getContext('2d');
+  const cssW=parseInt(srcCanvas.style.width)||srcCanvas.width;
+  const dpr=Math.max(1,srcCanvas.width/cssW);
+  const s=n=>Math.round(n*dpr);
 
-  // Background
-  ctx.fillStyle='#050b18';ctx.fillRect(0,0,totalW,totalH);
+  // Layout constants
+  const CW=s(680),PAD=s(28),OUTER=s(20),R=s(20);
+  const CIRC=s(148); // planet circle diameter
+  const HDR=s(172);  // header height
+  const statColW=Math.floor((CW-PAD*2-s(10))/2);
+  const cH=s(54),cG=s(8); // card height & gap
 
-  // Planet image centred vertically
-  ctx.drawImage(canvas,0,Math.round((totalH-cH)/2));
+  // ── PASS 1: draw body content to a temp canvas to measure height ──
+  const tmp=document.createElement('canvas');
+  tmp.width=CW-PAD*2;tmp.height=s(900);
+  const tc=tmp.getContext('2d');
+  let py=0;
 
-  // Subtle divider
-  ctx.strokeStyle='rgba(125,211,252,0.12)';ctx.lineWidth=1;
-  ctx.beginPath();ctx.moveTo(cW,pad);ctx.lineTo(cW,totalH-pad);ctx.stroke();
+  const drawSection=(label,col)=>{tc.font=`600 ${s(9)}px 'Nunito',sans-serif`;tc.fillStyle=col||'#334155';tc.fillText(label,0,py+s(9));py+=s(18);};
 
-  // Info panel
-  const px=cW+pad;let py=Math.round(30*scale);
-  const fs=n=>Math.round(n*scale);
-
-  // Planet name
-  ctx.font=`900 ${fs(22)}px 'Orbitron',monospace`;
-  ctx.fillStyle='#e2e8f0';ctx.fillText(nm,px,py);py+=fs(28);
-
-  // Type + life badges (text only)
-  ctx.font=`700 ${fs(10)}px 'Nunito',sans-serif`;
-  ctx.fillStyle='#c4b5fd';
-  const type=(a.type||'unknown').replace(/\b\w/g,c=>c.toUpperCase());
-  ctx.fillText(type,px,py);
-  if(a.lifeType&&a.lifeType!=='none'){
-    const lifeLabel=a.lifeType.replace(/\b\w/g,c=>c.toUpperCase());
-    const tw=ctx.measureText(type).width;
-    ctx.fillStyle='#6ee7b7';ctx.fillText('  ·  '+lifeLabel,px+tw,py);
-  }
-  py+=fs(24);
-
-  // Stat cards in 2-column grid
-  const statColW=Math.floor((panelW-pad*2-fs(8))/2);
-  const stats=[['DIAMETER',st.diam.toLocaleString()+' km'],['GRAVITY',st.grav+'× Earth'],['TEMPERATURE',st.tMin+'–'+st.tMax+'°C'],['DAY LENGTH',st.day+' hours'],['YEAR LENGTH',st.year+' Earth yrs'],['MOONS',st.moons+' moon'+(st.moons!==1?'s':'')]];
-  const cardH=fs(54),cardGap=fs(8);
+  // Stats
+  drawSection('PLANETARY STATS');
+  const stats=[['DIAMETER',st.diam.toLocaleString()+' km'],['GRAVITY',st.grav+'× Earth'],
+    ['TEMPERATURE',st.tMin+'°C – '+st.tMax+'°C'],['DAY LENGTH',st.day+' hours'],
+    ['YEAR LENGTH',st.year+' Earth yrs'],['MOONS',st.moons+' moon'+(st.moons!==1?'s':'')]];
   stats.forEach(([lbl,val],i)=>{
-    const col=i%2,row=Math.floor(i/2);
-    const sx=px+col*(statColW+cardGap),sy=py+row*(cardH+cardGap);
-    ctx.fillStyle='rgba(255,255,255,0.04)';_rrect(ctx,sx,sy,statColW,cardH,fs(8));ctx.fill();
-    ctx.font=`600 ${fs(9)}px 'Nunito',sans-serif`;ctx.fillStyle='#475569';ctx.fillText(lbl,sx+fs(8),sy+fs(16));
-    ctx.font=`700 ${fs(13)}px 'Nunito',sans-serif`;ctx.fillStyle='#cbd5e1';ctx.fillText(val,sx+fs(8),sy+fs(36));
+    const col=i%2,row=Math.floor(i/2),sx=col*(statColW+cG),sy=py+row*(cH+cG);
+    tc.fillStyle='rgba(255,255,255,0.05)';_rrect(tc,sx,sy,statColW,cH,s(8));tc.fill();
+    tc.strokeStyle='rgba(255,255,255,0.08)';tc.lineWidth=s(0.5);_rrect(tc,sx,sy,statColW,cH,s(8));tc.stroke();
+    tc.font=`600 ${s(8)}px 'Nunito',sans-serif`;tc.fillStyle='#334155';tc.fillText(lbl,sx+s(10),sy+s(15));
+    tc.font=`700 ${s(14)}px 'Nunito',sans-serif`;tc.fillStyle='#cbd5e1';tc.fillText(val,sx+s(10),sy+s(37));
   });
-  py+=Math.ceil(stats.length/2)*(cardH+cardGap)+fs(14);
+  py+=3*(cH+cG)+s(14);
 
-  // Key features (matches buildInfo logic)
+  // Key features
   const feats=[];
   if(a.terrain&&a.terrain.length)a.terrain.slice(0,2).forEach(t=>feats.push(t.charAt(0).toUpperCase()+t.slice(1)));
   if(a.special)feats.push(a.special.charAt(0).toUpperCase()+a.special.slice(0,55));
   if(a.extreme&&a.extreme.length)feats.push(a.extreme[0].charAt(0).toUpperCase()+a.extreme[0].slice(1));
-  if(!feats.length){feats.push('Barren rocky landscape');}
-  ctx.font=`600 ${fs(9)}px 'Nunito',sans-serif`;ctx.fillStyle='#334155';ctx.fillText('KEY FEATURES',px,py);py+=fs(16);
-  feats.forEach(f=>{
-    ctx.font=`600 ${fs(11)}px 'Nunito',sans-serif`;ctx.fillStyle='#64748b';
-    ctx.fillText('• '+f,px,py);py+=fs(18);
-  });
+  if(!feats.length)feats.push('Barren rocky landscape');
+  drawSection('KEY FEATURES');
+  feats.forEach(f=>{tc.font=`600 ${s(11)}px 'Nunito',sans-serif`;tc.fillStyle='#64748b';tc.fillText('● '+f,0,py);py+=s(18);});
+  py+=s(8);
 
-  // Life on [Planet] section
+  // Life section
   if(a.lifeType&&a.lifeType!=='none'){
-    py+=fs(10);
-    ctx.font=`600 ${fs(9)}px 'Nunito',sans-serif`;ctx.fillStyle='#059669';ctx.fillText('LIFE ON '+nm.toUpperCase(),px,py);py+=fs(16);
     const lifeDesc={microscopic:'Microbial — bacteria and single-celled organisms','plant-like':'Vegetation — plant-like life, no animals','simple-animals':'Simple — insects, fish and small creatures','complex-animals':'Complex — a rich ecosystem of large animals',intelligent:'Intelligent — beings with language and civilisation'};
-    ctx.font=`600 ${fs(11)}px 'Nunito',sans-serif`;ctx.fillStyle='#6ee7b7';
-    ctx.fillText('• '+(lifeDesc[a.lifeType]||a.lifeType),px,py);py+=fs(18);
-    if(a.creatures){
-      ctx.font=`italic 600 ${fs(11)}px 'Nunito',sans-serif`;ctx.fillStyle='#6ee7b7';
-      ctx.fillText('• '+a.creatures.charAt(0).toUpperCase()+a.creatures.slice(0,60),px,py);py+=fs(18);
-    }
-    const habList=a.habFactors?a.habFactors.filter(h=>!h.includes('cannot')).slice(0,2).map(h=>h.split(' ').slice(0,2).join(' ')).join(', '):'';
-    if(habList){
-      ctx.font=`600 ${fs(11)}px 'Nunito',sans-serif`;ctx.fillStyle='#6ee7b7';
-      ctx.fillText('• Habitable via: '+habList,px,py);py+=fs(18);
-    }
+    drawSection('LIFE ON '+nm.toUpperCase(),'#059669');
+    tc.font=`600 ${s(11)}px 'Nunito',sans-serif`;tc.fillStyle='#6ee7b7';tc.fillText('● '+(lifeDesc[a.lifeType]||a.lifeType),0,py);py+=s(18);
+    if(a.creatures){tc.font=`italic 600 ${s(11)}px 'Nunito',sans-serif`;tc.fillStyle='#6ee7b7';tc.fillText('● '+a.creatures.charAt(0).toUpperCase()+a.creatures.slice(0,68),0,py);py+=s(18);}
+    const hab=a.habFactors?a.habFactors.filter(h=>!h.includes('cannot')).slice(0,2).map(h=>h.split(' ').slice(0,2).join(' ')).join(', '):'';
+    if(hab){tc.font=`600 ${s(11)}px 'Nunito',sans-serif`;tc.fillStyle='#6ee7b7';tc.fillText('● Habitable via: '+hab,0,py);py+=s(18);}
+    py+=s(8);
   }
 
   // Compared to Earth
-  py+=fs(10);
-  const diamX=(st.diam/12742).toFixed(1);
-  const diamTxt=parseFloat(diamX)>=1?(diamX+'× Earth\'s diameter'):(((12742/st.diam).toFixed(1))+'× smaller than Earth');
-  const gravF=parseFloat(st.grav);const gravTxt=gravF>=1?(st.grav+'× stronger gravity'):((1/gravF).toFixed(1)+'× weaker gravity');
-  const dayX=(st.day/24).toFixed(1);const dayTxt=parseFloat(dayX)>=1?(dayX+'× longer days'):('Days '+(24/st.day).toFixed(1)+'× shorter');
-  ctx.font=`600 ${fs(9)}px 'Nunito',sans-serif`;ctx.fillStyle='#334155';ctx.fillText('COMPARED TO EARTH',px,py);py+=fs(16);
-  [['Size',diamTxt],['Gravity',gravTxt],['Day length',dayTxt]].forEach(([lbl,val])=>{
-    ctx.font=`600 ${fs(10)}px 'Nunito',sans-serif`;ctx.fillStyle='#475569';
-    const lw=ctx.measureText(lbl+':  ').width;
-    ctx.fillText(lbl+':',px,py);
-    ctx.font=`600 ${fs(10)}px 'Nunito',sans-serif`;ctx.fillStyle='#94a3b8';ctx.fillText(val,px+lw,py);py+=fs(18);
+  const dX=(st.diam/12742).toFixed(1);
+  const dTxt=parseFloat(dX)>=1?(dX+'× Earth\'s diameter'):(((12742/st.diam).toFixed(1))+'× smaller than Earth');
+  const gF=parseFloat(st.grav);const gTxt=gF>=1?(st.grav+'× stronger gravity'):((1/gF).toFixed(1)+'× weaker gravity');
+  const dyX=(st.day/24).toFixed(1);const dyTxt=parseFloat(dyX)>=1?(dyX+'× longer days'):('Days '+(24/st.day).toFixed(1)+'× shorter');
+  drawSection('COMPARED TO EARTH');
+  [['Size',dTxt],['Gravity',gTxt],['Day length',dyTxt]].forEach(([lbl,val])=>{
+    tc.font=`600 ${s(10)}px 'Nunito',sans-serif`;tc.fillStyle='#475569';
+    const lw=tc.measureText(lbl+':  ').width;tc.fillText(lbl+':',0,py);
+    tc.fillStyle='#94a3b8';tc.fillText(val,lw,py);py+=s(18);
   });
+  py+=s(10);
+  const bodyH=py;
 
-  // Footer credit
-  py+=fs(16);
-  ctx.font=`600 ${fs(9)}px 'Nunito',sans-serif`;ctx.fillStyle='#1e3a5f';
-  ctx.fillText('Built with Planet Builder · planet-builder.onrender.com',px,py);
+  // ── PASS 2: final canvas at correct height ──
+  const footerH=s(38);
+  const totalCardH=HDR+PAD+bodyH+PAD+footerH;
+  const TW=CW+OUTER*2,TH=totalCardH+OUTER*2;
+  const fc2=document.createElement('canvas');fc2.width=TW;fc2.height=TH;
+  const fc=fc2.getContext('2d');
 
-  const lnk=document.createElement('a');lnk.href=comp.toDataURL('image/png');lnk.download=slug+'-planet.png';lnk.click();
+  // Outer background
+  fc.fillStyle='#020a18';fc.fillRect(0,0,TW,TH);
+
+  // Card background + border (correct height now)
+  fc.fillStyle='#0a162c';_rrect(fc,OUTER,OUTER,CW,totalCardH,R);fc.fill();
+  fc.strokeStyle='rgba(125,211,252,0.28)';fc.lineWidth=s(1.5);_rrect(fc,OUTER,OUTER,CW,totalCardH,R);fc.stroke();
+
+  // Header gradient (clip to card to get rounded top)
+  fc.save();_rrect(fc,OUTER,OUTER,CW,totalCardH,R);fc.clip();
+  const hg=fc.createLinearGradient(OUTER,OUTER,OUTER+CW,OUTER+HDR);
+  hg.addColorStop(0,'#0f172a');hg.addColorStop(1,'#1e1b4b');
+  fc.fillStyle=hg;fc.fillRect(OUTER,OUTER,CW,HDR);
+  // Rainbow top bar
+  const rb=fc.createLinearGradient(OUTER,OUTER,OUTER+CW,OUTER);
+  rb.addColorStop(0,'#7dd3fc');rb.addColorStop(0.5,'#a78bfa');rb.addColorStop(1,'#34d399');
+  fc.fillStyle=rb;fc.fillRect(OUTER,OUTER,CW,s(3));
+  fc.restore();
+
+  // Header text
+  const hx=OUTER+PAD;let hy=OUTER+s(26);
+  fc.font=`600 ${s(8)}px 'Nunito',sans-serif`;fc.fillStyle='#475569';
+  fc.fillText('PLANET PASSPORT · NGARRI PRIMARY SCHOOL',hx,hy);hy+=s(24);
+  fc.font=`900 ${s(26)}px 'Orbitron',monospace`;fc.fillStyle='#7dd3fc';
+  fc.fillText(nm,hx,hy+s(22));hy+=s(44);
+
+  // Badges
+  const typ=(a.type||'unknown').replace(/\b\w/g,c=>c.toUpperCase());
+  const lifeL=a.lifeType&&a.lifeType!=='none'?a.lifeType.replace(/\b\w/g,c=>c.toUpperCase()):'No Life';
+  const civL=a.civLevel&&a.civLevel!=='none'?a.civLevel.replace(/\b\w/g,c=>c.toUpperCase()):'';
+  const drawBadge=(text,fg,bg,border,bx,by)=>{
+    fc.font=`700 ${s(9)}px 'Nunito',sans-serif`;
+    const tw=fc.measureText(text).width,bw=tw+s(16),bh=s(20);
+    fc.fillStyle=bg;_rrect(fc,bx,by,bw,bh,s(10));fc.fill();
+    fc.strokeStyle=border;fc.lineWidth=s(0.8);_rrect(fc,bx,by,bw,bh,s(10));fc.stroke();
+    fc.fillStyle=fg;fc.fillText(text,bx+s(8),by+s(14));
+    return bw+s(8);
+  };
+  let bx=hx;
+  bx+=drawBadge(typ,'#c4b5fd','rgba(167,139,250,0.15)','rgba(167,139,250,0.3)',bx,hy);
+  bx+=drawBadge(lifeL,'#6ee7b7','rgba(52,211,153,0.12)','rgba(52,211,153,0.25)',bx,hy);
+  if(civL)drawBadge(civL+' Civ','#fcd34d','rgba(251,191,36,0.12)','rgba(251,191,36,0.25)',bx,hy);
+
+  // Circular planet image (right of header)
+  const cr=CIRC/2,cx2=OUTER+CW-PAD-cr,cy2=OUTER+HDR/2;
+  fc.save();fc.beginPath();fc.arc(cx2,cy2,cr,0,Math.PI*2);fc.clip();
+  fc.drawImage(srcCanvas,cx2-cr,cy2-cr,CIRC,CIRC);
+  fc.restore();
+  fc.strokeStyle='rgba(125,211,252,0.4)';fc.lineWidth=s(2);
+  fc.beginPath();fc.arc(cx2,cy2,cr,0,Math.PI*2);fc.stroke();
+
+  // Header divider
+  fc.strokeStyle='rgba(125,211,252,0.1)';fc.lineWidth=s(1);
+  fc.beginPath();fc.moveTo(OUTER,OUTER+HDR);fc.lineTo(OUTER+CW,OUTER+HDR);fc.stroke();
+
+  // Body content from temp canvas
+  fc.drawImage(tmp,0,0,CW-PAD*2,bodyH,OUTER+PAD,OUTER+HDR+PAD,CW-PAD*2,bodyH);
+
+  // Footer
+  const fy=OUTER+HDR+PAD+bodyH+PAD;
+  fc.strokeStyle='rgba(255,255,255,0.05)';fc.lineWidth=s(1);
+  fc.beginPath();fc.moveTo(OUTER,fy);fc.lineTo(OUTER+CW,fy);fc.stroke();
+  fc.font=`600 ${s(8)}px 'Nunito',sans-serif`;fc.fillStyle='#1e3a5f';fc.textAlign='center';
+  fc.fillText('BUILT WITH PLANET BUILDER · PLANET-BUILDER.ONRENDER.COM',OUTER+CW/2,fy+s(24));
+  fc.textAlign='left';
+
+  const lnk=document.createElement('a');lnk.href=fc2.toDataURL('image/png');lnk.download=slug+'-planet.png';lnk.click();
 }
 
 /* ── FULLSCREEN ── */
@@ -1615,7 +1654,7 @@ function printPassport(){
   let ov=document.getElementById('pp-print-overlay');
   if(!ov){ov=document.createElement('div');ov.id='pp-print-overlay';document.body.appendChild(ov);}
   ov.style.cssText='position:fixed;inset:0;z-index:99999;background:#050b18;display:flex;align-items:center;justify-content:center;padding:2rem;';
-  ov.innerHTML=inner+`<button onclick="document.getElementById('pp-print-overlay').style.display='none'" style="position:fixed;top:1rem;right:1rem;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#94a3b8;border-radius:8px;padding:0.4rem 0.9rem;cursor:pointer;font-size:0.8rem;">✕ Close</button><button onclick="window.print()" style="position:fixed;bottom:1.5rem;right:1.5rem;background:rgba(125,211,252,0.15);border:1px solid rgba(125,211,252,0.4);color:#7dd3fc;border-radius:10px;padding:0.55rem 1.4rem;cursor:pointer;font-size:0.85rem;font-weight:700;">🖨 Print</button>`;
+  ov.innerHTML=inner+`<button onclick="document.getElementById('pp-print-overlay').style.display='none'" style="position:fixed;top:1rem;right:1rem;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#94a3b8;border-radius:8px;padding:0.4rem 0.9rem;cursor:pointer;font-size:0.8rem;">✕ Close</button><div style="position:fixed;bottom:1.5rem;right:1.5rem;display:flex;gap:0.6rem;"><button onclick="savePlanetSnapshot()" style="background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.4);color:#34d399;border-radius:10px;padding:0.55rem 1.4rem;cursor:pointer;font-size:0.85rem;font-weight:700;">💾 Download Image</button><button onclick="window.print()" style="background:rgba(125,211,252,0.15);border:1px solid rgba(125,211,252,0.4);color:#7dd3fc;border-radius:10px;padding:0.55rem 1.4rem;cursor:pointer;font-size:0.85rem;font-weight:700;">🖨 Print</button></div>`;
 }
 
 /* ── DECODE STATE FROM URL HASH ── */
