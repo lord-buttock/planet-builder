@@ -1216,6 +1216,22 @@ function savePlanetSnapshot(){
 
   const drawSection=(label,col)=>{tc.font=`600 ${s(9)}px 'Nunito',sans-serif`;tc.fillStyle=col||'#94a3b8';tc.fillText(label,0,py+s(9));py+=s(18);};
 
+  // Word-wrap helper for canvas
+  const wrapText=(ctx,text,maxW,lineH)=>{const words=text.split(' ');let line='';words.forEach(w=>{const test=line?line+' '+w:w;if(ctx.measureText(test).width>maxW&&line){ctx.fillText(line,0,py);py+=lineH;line=w;}else{line=test;}});if(line){ctx.fillText(line,0,py);py+=lineH;}};
+
+  // Planet summary paragraph
+  const summaryStr=genPlanetSummary(a);
+  if(summaryStr){
+    tc.font=`italic 600 ${s(11)}px 'Nunito',sans-serif`;tc.fillStyle='#cbd5e1';
+    // left border accent
+    tc.fillStyle='rgba(125,211,252,0.3)';tc.fillRect(0,py,s(2),s(60));
+    tc.fillStyle='#cbd5e1';
+    const bodyW=tmp.width-s(14);
+    const savedX=tc.textAlign;tc.save();tc.translate(s(10),0);
+    wrapText(tc,summaryStr,bodyW-s(10),s(17));tc.restore();
+    py+=s(10);
+  }
+
   // Stats
   drawSection('PLANETARY STATS');
   const stats=[['DIAMETER',st.diam.toLocaleString()+' km'],['GRAVITY',st.grav+'× Earth'],
@@ -1609,6 +1625,43 @@ function sharePlanet(){
   });
 }
 
+/* ── PLANET SUMMARY ── */
+function genPlanetSummary(a){
+  const nm=a.name||'This planet';
+  // S1: Identity
+  const typeDesc={'rocky':'a rocky terrestrial world','watery / ocean':'a vast ocean world covered in deep seas','icy':'a frozen ice world locked in permanent winter','volcanic / lava':'a violent volcanic world of fire and molten rock','desert / sandy':'a scorched desert world of endless sand and dust','forest / jungle':'a lush jungle world teeming with dense vegetation','gas giant':'an enormous gas giant of swirling clouds and storms','toxic / acid':'a toxic world of corrosive acid and poisonous skies','crystal':'a glittering world of massive crystal formations'};
+  const td=typeDesc[a.type]||'a mysterious alien world';
+  const col=a.mainColour?`, its surface bathed in ${a.mainColour} hues`:'';
+  const s1=`${nm} is ${td}${col}.`;
+  // S2: Terrain and surface
+  const tp=[];
+  if(a.terrain&&a.terrain.length)a.terrain.slice(0,2).forEach(t=>tp.push(t));
+  if(a.special)tp.push(a.special);
+  if(a.extreme&&a.extreme.length)tp.push(a.extreme[0]);
+  let s2='';
+  if(tp.length===1)s2=`Its surface is marked by ${tp[0]}.`;
+  else if(tp.length>=2){const last=tp.pop();s2=`Its terrain includes ${tp.join(', ')} and ${last}.`;}
+  // S3: Atmosphere
+  const ap=[];
+  if(a.clouds){if(a.clouds.includes('thick heavy'))ap.push('thick clouds wrap the planet in permanent gloom');else if(a.clouds.includes('dramatic swirling'))ap.push('dramatic storm clouds churn through the sky');else if(a.clouds.includes('thin wispy'))ap.push('thin wisps of cloud drift through the upper atmosphere');}
+  if(a.light){if(a.light.includes('brightly'))ap.push('a brilliant sun floods the surface with light');else if(a.light.includes('dimly'))ap.push('a distant sun barely lights the surface');else if(a.light.includes('glowing from within'))ap.push('the planet radiates a mysterious inner glow');else if(a.light.includes('dramatically'))ap.push('one side blazes in full sunlight while the other lies in deep shadow');}
+  if(a.atmo&&a.atmo.includes('aurora'))ap.push('spectacular auroras ripple across the polar skies');
+  let s3='';
+  if(ap.length)s3=ap.slice(0,2).map((p,i)=>i===0?p.charAt(0).toUpperCase()+p.slice(1):p).join(', and ')+'.';
+  // S4: Life and civilisation
+  let s4='';
+  if(!a.lifeType||a.lifeType==='none'){
+    s4=`${nm} is lifeless — no organisms of any kind have been detected.`;
+  } else {
+    const li={'microscopic':'microscopic organisms cling to life in its harsh conditions','plant-like':'plant-like vegetation blankets much of the surface','simple-animals':'simple creatures move across its terrain','complex-animals':'a rich ecosystem of complex animals thrives across the planet','intelligent':`intelligent beings with language and culture call ${nm} home`};
+    if(a.creatures){s4=`${a.creatures.charAt(0).toUpperCase()+a.creatures.slice(0,90)}.`;}
+    else{s4=`On ${nm}, ${li[a.lifeType]||'life has emerged'}.`;}
+    const cd={primitive:'A primitive civilisation is just beginning to emerge.',ancient:'The ruins of an ancient civilisation still stand across the landscape.',industrial:'An industrial civilisation is rapidly transforming the planet.',modern:'A modern civilisation spans most of the planet.',advanced:'A highly advanced civilisation has mastered their world.',unknown:'Signs of a civilisation have been detected, though little is known about them.'};
+    if(a.civLevel&&cd[a.civLevel])s4+=' '+cd[a.civLevel];
+  }
+  return [s1,s2,s3,s4].filter(Boolean).join(' ');
+}
+
 /* ── PLANET PASSPORT ── */
 function printPassport(){
   if(!_lastA)return;
@@ -1623,6 +1676,10 @@ function printPassport(){
   if(a.extreme&&a.extreme.length)features.push(a.extreme[0].charAt(0).toUpperCase()+a.extreme[0].slice(1));
   const planetCanvas=document.getElementById('planet-canvas-3d');
   const planetImg=planetCanvas?planetCanvas.toDataURL('image/png'):'';
+
+  // Planet summary
+  const summaryText=genPlanetSummary(a);
+  const summaryHtml=summaryText?`<div style="font-size:0.8rem;line-height:1.7;color:#cbd5e1;font-style:italic;border-left:2px solid rgba(125,211,252,0.25);padding-left:0.75rem;margin-bottom:1rem;">${summaryText}</div>`:'';
 
   // Life section
   const lifeDescMap={microscopic:'Microbial — bacteria and single-celled organisms','plant-like':'Vegetation — plant-like life, no animals','simple-animals':'Simple — insects, fish and small creatures','complex-animals':'Complex — a rich ecosystem of large animals',intelligent:'Intelligent — beings with language and civilisation'};
@@ -1662,6 +1719,7 @@ function printPassport(){
       ${planetImg?`<img src="${planetImg}" style="width:110px;height:110px;border-radius:50%;border:2px solid rgba(125,211,252,0.25);flex-shrink:0;object-fit:cover;" />`:''}
     </div>
     <div style="padding:1.1rem 1.6rem;">
+      ${summaryHtml}
       <div style="font-size:0.55rem;text-transform:uppercase;letter-spacing:0.14em;color:#e2e8f0;margin-bottom:0.5rem;">Planetary Stats</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.45rem;margin-bottom:1.1rem;">
         ${[['Diameter',st.diam.toLocaleString()+' km'],['Gravity',st.grav+'× Earth'],['Temperature',st.tMin+'°C – '+st.tMax+'°C'],['Day Length',st.day+' hours'],['Year Length',st.year+' Earth yrs'],['Moons',st.moons+' moon'+(st.moons!==1?'s':'')]].map(([l,v])=>`<div style="background:rgba(255,255,255,0.04);border-radius:9px;padding:0.5rem 0.65rem;"><div style="font-size:0.55rem;text-transform:uppercase;letter-spacing:0.07em;color:#e2e8f0;margin-bottom:0.12rem;">${l}</div><div style="font-size:0.82rem;font-weight:700;color:#cbd5e1;">${v}</div></div>`).join('')}
