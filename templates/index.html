@@ -206,11 +206,11 @@ select option{background:#0d1f38;color:#e2e8f0;}
 .badge-life-maybe{background:rgba(251,191,36,0.11);color:#fcd34d;border:1px solid rgba(251,191,36,0.28);}
 .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin-bottom:1.4rem;}
 .stat-item{background:rgba(255,255,255,0.025);border-radius:11px;padding:0.6rem 0.65rem;}
-.stat-label{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:#334155;margin-bottom:0.22rem;}
+.stat-label{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:#e2e8f0;margin-bottom:0.22rem;}
 .stat-value{font-size:0.9rem;font-weight:700;color:#cbd5e1;line-height:1.2;}
-.features-title{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:#334155;margin-bottom:0.55rem;}
+.features-title{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:#e2e8f0;margin-bottom:0.55rem;}
 .features-list{display:flex;flex-direction:column;gap:0.38rem;}
-.feature-item{display:flex;align-items:flex-start;gap:0.5rem;font-size:0.82rem;color:#64748b;line-height:1.45;}
+.feature-item{display:flex;align-items:flex-start;gap:0.5rem;font-size:0.82rem;color:#7dd3fc;line-height:1.45;}
 .feature-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:0.45rem;}
 .name-row{display:flex;gap:0.5rem;align-items:center;}
 .name-row input{flex:1;}
@@ -233,10 +233,10 @@ select option{background:#0d1f38;color:#e2e8f0;}
 [data-tip]::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:rgba(5,15,35,0.97);border:1px solid rgba(125,211,252,0.2);color:#cbd5e1;font-size:0.75rem;font-weight:600;font-family:'Nunito',sans-serif;line-height:1.5;padding:0.45rem 0.75rem;border-radius:8px;white-space:normal;width:220px;z-index:300;opacity:0;pointer-events:none;transition:opacity 0.15s;text-transform:none;letter-spacing:0;}
 [data-tip]:hover::after{opacity:1;}
 .earth-compare{margin-top:1rem;padding:0.75rem 0.85rem;background:rgba(125,211,252,0.04);border:1px solid rgba(125,211,252,0.1);border-radius:12px;}
-.earth-compare-title{font-size:0.62rem;text-transform:uppercase;letter-spacing:0.1em;color:#334155;margin-bottom:0.55rem;}
+.earth-compare-title{font-size:0.62rem;text-transform:uppercase;letter-spacing:0.1em;color:#e2e8f0;margin-bottom:0.55rem;}
 .earth-compare-row{display:flex;justify-content:space-between;align-items:center;font-size:0.78rem;padding:0.22rem 0;border-bottom:1px solid rgba(255,255,255,0.04);}
 .earth-compare-row:last-child{border-bottom:none;}
-.earth-compare-label{color:#475569;}
+.earth-compare-label{color:#7dd3fc;}
 .earth-compare-val{color:#7dd3fc;font-weight:700;}
 #pp-print-overlay{display:none;}
 @media print{body>*{display:none!important;}#pp-print-overlay{display:block!important;background:white;color:#111;padding:2rem;font-family:'Nunito',sans-serif;}}
@@ -536,7 +536,6 @@ select option{background:#0d1f38;color:#e2e8f0;}
   </div>
   <div style="text-align:center;margin-top:0.75rem;display:flex;flex-wrap:wrap;gap:0.5rem;justify-content:center;">
     <button class="copy-btn" id="share-btn" onclick="sharePlanet()" style="background:rgba(167,139,250,0.12);border-color:rgba(167,139,250,0.35);color:#c4b5fd;">🔗 Share Planet</button>
-    <button class="copy-btn" id="passport-btn" onclick="printPassport()" style="background:rgba(52,211,153,0.1);border-color:rgba(52,211,153,0.3);color:#34d399;">🪪 Print Passport</button>
   </div>
   <div class="redo-hint">Want to change something? Scroll back up, update your answers, and click the button again.</div>
 </div>
@@ -549,6 +548,7 @@ select option{background:#0d1f38;color:#e2e8f0;}
         <h2>Your Planet in 3D</h2>
         <p>A live interactive model built from your answers — drag to spin it around</p>
       </div>
+      <button id="passport-btn" onclick="printPassport()" style="margin-left:auto;display:none;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);color:#34d399;border-radius:10px;padding:0.45rem 1rem;cursor:pointer;font-family:'Nunito',sans-serif;font-size:0.82rem;font-weight:700;white-space:nowrap;">🪪 Print Passport</button>
     </div>
     <div class="launch-overlay hidden" id="launch-overlay">
       <div class="launch-spinner"></div>
@@ -565,9 +565,6 @@ select option{background:#0d1f38;color:#e2e8f0;}
           <button class="fs-btn" id="fs-btn" onclick="toggleFullscreen()" title="Fullscreen">⛶</button>
           <canvas id="planet-canvas-3d"></canvas>
           <div class="drag-hint">drag to rotate</div>
-          <div class="canvas-actions" id="canvas-actions" style="display:none;">
-            <button class="canvas-btn" onclick="savePlanetSnapshot()">📸 Save Image</button>
-          </div>
         </div>
         <div class="planet-info-col" id="planet-info-col"></div>
       </div>
@@ -1140,8 +1137,8 @@ function buildPlanet(a){
     const st=genStats(a);
     const qualBadge=`<div style="font-size:.68rem;font-family:'Orbitron',monospace;letter-spacing:.1em;text-transform:uppercase;padding:.25rem .75rem;border-radius:999px;margin-bottom:.6rem;display:inline-block;background:rgba(52,211,153,.1);color:#6ee7b7;border:1px solid rgba(52,211,153,.25);">✦ Babylon.js · PBR · GlowLayer</div>`;
     col.innerHTML=qualBadge+buildInfo(a,st);
-    const ca=document.getElementById('canvas-actions');if(ca)ca.style.display='flex';
     const fsb=document.getElementById('fs-btn');if(fsb)fsb.style.display='flex';
+    const ppb=document.getElementById('passport-btn');if(ppb)ppb.style.display='inline-block';
 
     // Moons
     const _moonMeshes=[];
