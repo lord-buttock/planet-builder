@@ -1217,7 +1217,7 @@ function savePlanetSnapshot(){
   const tc=tmp.getContext('2d');
   let py=0;
 
-  const drawSection=(label,col)=>{tc.font=`600 ${s(9)}px 'Nunito',sans-serif`;tc.fillStyle=col||'#334155';tc.fillText(label,0,py+s(9));py+=s(18);};
+  const drawSection=(label,col)=>{tc.font=`600 ${s(9)}px 'Nunito',sans-serif`;tc.fillStyle=col||'#94a3b8';tc.fillText(label,0,py+s(9));py+=s(18);};
 
   // Stats
   drawSection('PLANETARY STATS');
@@ -1228,7 +1228,7 @@ function savePlanetSnapshot(){
     const col=i%2,row=Math.floor(i/2),sx=col*(statColW+cG),sy=py+row*(cH+cG);
     tc.fillStyle='rgba(255,255,255,0.05)';_rrect(tc,sx,sy,statColW,cH,s(8));tc.fill();
     tc.strokeStyle='rgba(255,255,255,0.08)';tc.lineWidth=s(0.5);_rrect(tc,sx,sy,statColW,cH,s(8));tc.stroke();
-    tc.font=`600 ${s(8)}px 'Nunito',sans-serif`;tc.fillStyle='#334155';tc.fillText(lbl,sx+s(10),sy+s(15));
+    tc.font=`600 ${s(8)}px 'Nunito',sans-serif`;tc.fillStyle='#94a3b8';tc.fillText(lbl,sx+s(10),sy+s(15));
     tc.font=`700 ${s(14)}px 'Nunito',sans-serif`;tc.fillStyle='#cbd5e1';tc.fillText(val,sx+s(10),sy+s(37));
   });
   py+=3*(cH+cG)+s(14);
@@ -1240,7 +1240,7 @@ function savePlanetSnapshot(){
   if(a.extreme&&a.extreme.length)feats.push(a.extreme[0].charAt(0).toUpperCase()+a.extreme[0].slice(1));
   if(!feats.length)feats.push('Barren rocky landscape');
   drawSection('KEY FEATURES');
-  feats.forEach(f=>{tc.font=`600 ${s(11)}px 'Nunito',sans-serif`;tc.fillStyle='#64748b';tc.fillText('● '+f,0,py);py+=s(18);});
+  feats.forEach(f=>{tc.font=`600 ${s(11)}px 'Nunito',sans-serif`;tc.fillStyle='#cbd5e1';tc.fillText('● '+f,0,py);py+=s(18);});
   py+=s(8);
 
   // Life section
@@ -1261,7 +1261,7 @@ function savePlanetSnapshot(){
   const dyX=(st.day/24).toFixed(1);const dyTxt=parseFloat(dyX)>=1?(dyX+'× longer days'):('Days '+(24/st.day).toFixed(1)+'× shorter');
   drawSection('COMPARED TO EARTH');
   [['Size',dTxt],['Gravity',gTxt],['Day length',dyTxt]].forEach(([lbl,val])=>{
-    tc.font=`600 ${s(10)}px 'Nunito',sans-serif`;tc.fillStyle='#475569';
+    tc.font=`600 ${s(10)}px 'Nunito',sans-serif`;tc.fillStyle='#94a3b8';
     const lw=tc.measureText(lbl+':  ').width;tc.fillText(lbl+':',0,py);
     tc.fillStyle='#94a3b8';tc.fillText(val,lw,py);py+=s(18);
   });
@@ -1271,7 +1271,8 @@ function savePlanetSnapshot(){
   // ── PASS 2: final canvas at correct height ──
   const footerH=s(38);
   const totalCardH=HDR+PAD+bodyH+PAD+footerH;
-  const TW=CW+OUTER*2,TH=totalCardH+OUTER*2;
+  const TW=CW+OUTER*2;
+  const TH=Math.max(totalCardH+OUTER*2,Math.ceil(TW*1.419)); // A5 portrait ratio
   const fc2=document.createElement('canvas');fc2.width=TW;fc2.height=TH;
   const fc=fc2.getContext('2d');
 
@@ -1295,7 +1296,7 @@ function savePlanetSnapshot(){
 
   // Header text
   const hx=OUTER+PAD;let hy=OUTER+s(26);
-  fc.font=`600 ${s(8)}px 'Nunito',sans-serif`;fc.fillStyle='#475569';
+  fc.font=`600 ${s(8)}px 'Nunito',sans-serif`;fc.fillStyle='#7dd3fc';
   fc.fillText('PLANET PASSPORT · NGARRI PRIMARY SCHOOL',hx,hy);hy+=s(24);
   fc.font=`900 ${s(26)}px 'Orbitron',monospace`;fc.fillStyle='#7dd3fc';
   fc.fillText(nm,hx,hy+s(22));hy+=s(44);
@@ -1336,7 +1337,7 @@ function savePlanetSnapshot(){
   const fy=OUTER+HDR+PAD+bodyH+PAD;
   fc.strokeStyle='rgba(255,255,255,0.05)';fc.lineWidth=s(1);
   fc.beginPath();fc.moveTo(OUTER,fy);fc.lineTo(OUTER+CW,fy);fc.stroke();
-  fc.font=`600 ${s(8)}px 'Nunito',sans-serif`;fc.fillStyle='#1e3a5f';fc.textAlign='center';
+  fc.font=`600 ${s(8)}px 'Nunito',sans-serif`;fc.fillStyle='#475569';fc.textAlign='center';
   fc.fillText('BUILT WITH PLANET BUILDER · PLANET-BUILDER.ONRENDER.COM',OUTER+CW/2,fy+s(24));
   fc.textAlign='left';
 
@@ -1392,7 +1393,7 @@ function generate(){
   // ── VIDEO PROMPT ──
   if(a.camView==='surface'){
     // Ground-level camera pan
-    vidParts.push(`A short cinematic video clip shot on the surface of alien planet ${pN}. The camera begins still, then slowly and smoothly pans from left to right, moving forwards, gradually revealing the dramatic alien landscape ahead.`);
+    vidParts.push(`A 10 second cinematic video clip shot on the surface of alien planet ${pN}. The camera begins still, then slowly and smoothly pans from left to right, moving forwards, gradually revealing the dramatic alien landscape ahead.`);
     if(a.focusFeature) vidParts.push(`The camera is facing ${a.focusFeature}, slowly sweeping across to reveal its full scale.`);
     // Environment
     const vgr=[];if(a.mainColour)vgr.push(a.mainColour);if(a.type)vgr.push(a.type);
@@ -1422,7 +1423,7 @@ function generate(){
     vidParts.push(`Style: ${a.artStyle}. Cinematic wide-angle lens. High quality, sharp focus.`);
   } else {
     // Space view — rotating planet
-    let vop=`A short cinematic video of the alien planet ${pN} filmed from space. The planet is centred in frame as a complete sphere`;
+    let vop=`A 10 second cinematic video of the alien planet ${pN} filmed from space. The planet is centred in frame as a complete sphere`;
     if(a.space)vop+=`, set ${a.space}`;
     if(a.moons&&!a.moons.includes('alone'))vop+=`, with ${a.moons} visible nearby`;
     vidParts.push(vop+'.');
