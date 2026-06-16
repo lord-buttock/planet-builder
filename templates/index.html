@@ -1621,14 +1621,37 @@ function printPassport(){
   if(a.terrain&&a.terrain.length)a.terrain.slice(0,2).forEach(t=>features.push(t.charAt(0).toUpperCase()+t.slice(1)));
   if(a.special)features.push(a.special.charAt(0).toUpperCase()+a.special.slice(0,55));
   if(a.extreme&&a.extreme.length)features.push(a.extreme[0].charAt(0).toUpperCase()+a.extreme[0].slice(1));
-  const promptExcerpt=_lastImgPrompt?_lastImgPrompt.split('.').slice(0,2).join('.')+'.':'';
   const planetCanvas=document.getElementById('planet-canvas-3d');
   const planetImg=planetCanvas?planetCanvas.toDataURL('image/png'):'';
+
+  // Life section
+  const lifeDescMap={microscopic:'Microbial — bacteria and single-celled organisms','plant-like':'Vegetation — plant-like life, no animals','simple-animals':'Simple — insects, fish and small creatures','complex-animals':'Complex — a rich ecosystem of large animals',intelligent:'Intelligent — beings with language and civilisation'};
+  let lifeHtml='';
+  if(a.lifeType&&a.lifeType!=='none'){
+    const rows=[`<div style="font-size:0.78rem;color:#7dd3fc;padding:0.15rem 0;">● ${lifeDescMap[a.lifeType]||a.lifeType}</div>`];
+    if(a.creatures)rows.push(`<div style="font-size:0.78rem;color:#7dd3fc;padding:0.15rem 0;font-style:italic;">● ${a.creatures.charAt(0).toUpperCase()+a.creatures.slice(0,70)}</div>`);
+    const hab=a.habFactors?a.habFactors.filter(h=>!h.includes('cannot')).slice(0,2).map(h=>h.split(' ').slice(0,2).join(' ')).join(', '):'';
+    if(hab)rows.push(`<div style="font-size:0.78rem;color:#7dd3fc;padding:0.15rem 0;">● Habitable via: ${hab}</div>`);
+    lifeHtml=`<div style="font-size:0.55rem;text-transform:uppercase;letter-spacing:0.14em;color:#6ee7b7;margin-bottom:0.4rem;margin-top:0.85rem;">Life on ${nm}</div><div style="margin-bottom:0.6rem;">${rows.join('')}</div>`;
+  }
+
+  // Compared to Earth
+  const dX=(st.diam/12742).toFixed(1);
+  const diamTxt=parseFloat(dX)>=1?(dX+'× Earth\'s diameter'):((12742/st.diam).toFixed(1)+'× smaller than Earth');
+  const gF=parseFloat(st.grav);
+  const gravTxt=gF>=1?(st.grav+'× stronger gravity'):((1/gF).toFixed(1)+'× weaker gravity');
+  const dyX=(st.day/24).toFixed(1);
+  const dayTxt=parseFloat(dyX)>=1?(dyX+'× longer days'):('Days '+(24/st.day).toFixed(1)+'× shorter');
+  const earthHtml=`<div style="background:rgba(125,211,252,0.04);border:1px solid rgba(125,211,252,0.1);border-radius:10px;padding:0.65rem 0.85rem;margin-top:0.85rem;">
+    <div style="font-size:0.55rem;text-transform:uppercase;letter-spacing:0.14em;color:#e2e8f0;margin-bottom:0.45rem;">Compared to Earth</div>
+    ${[['Size',diamTxt],['Gravity',gravTxt],['Day length',dayTxt]].map(([l,v])=>`<div style="display:flex;justify-content:space-between;font-size:0.78rem;padding:0.2rem 0;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="color:#7dd3fc;">${l}</span><span style="color:#7dd3fc;font-weight:700;">${v}</span></div>`).join('')}
+  </div>`;
+
   const inner=`
   <div style="width:100%;max-width:460px;background:#0a162c;border:2px solid rgba(125,211,252,0.3);border-radius:20px;overflow:hidden;font-family:sans-serif;">
     <div style="background:linear-gradient(135deg,#0f172a,#1e1b4b);padding:1.4rem 1.6rem 1.1rem;border-bottom:1px solid rgba(125,211,252,0.15);position:relative;display:flex;align-items:center;gap:1rem;">
       <div style="flex:1;min-width:0;">
-        <div style="font-size:0.55rem;letter-spacing:0.2em;color:#475569;text-transform:uppercase;margin-bottom:0.35rem;">Planet Passport · Ngarri Primary School</div>
+        <div style="font-size:0.55rem;letter-spacing:0.2em;color:#7dd3fc;text-transform:uppercase;margin-bottom:0.35rem;">Planet Passport · Ngarri Primary School</div>
         <div style="font-size:1.5rem;font-weight:900;color:#7dd3fc;line-height:1.2;margin-bottom:0.55rem;">${nm}</div>
         <div style="display:flex;flex-wrap:wrap;gap:0.3rem;">
           <span style="font-size:0.62rem;font-weight:700;padding:0.18rem 0.6rem;border-radius:999px;background:rgba(167,139,250,0.15);color:#c4b5fd;border:1px solid rgba(167,139,250,0.3);">${type}</span>
@@ -1639,14 +1662,15 @@ function printPassport(){
       ${planetImg?`<img src="${planetImg}" style="width:110px;height:110px;border-radius:50%;border:2px solid rgba(125,211,252,0.25);flex-shrink:0;object-fit:cover;" />`:''}
     </div>
     <div style="padding:1.1rem 1.6rem;">
-      <div style="font-size:0.55rem;text-transform:uppercase;letter-spacing:0.14em;color:#334155;margin-bottom:0.5rem;">Planetary Stats</div>
+      <div style="font-size:0.55rem;text-transform:uppercase;letter-spacing:0.14em;color:#e2e8f0;margin-bottom:0.5rem;">Planetary Stats</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.45rem;margin-bottom:1.1rem;">
-        ${[['Diameter',st.diam.toLocaleString()+' km'],['Gravity',st.grav+'× Earth'],['Temperature',st.tMin+'°C – '+st.tMax+'°C'],['Day Length',st.day+' hours'],['Year Length',st.year+' Earth yrs'],['Moons',st.moons+' moon'+(st.moons!==1?'s':'')]].map(([l,v])=>`<div style="background:rgba(255,255,255,0.04);border-radius:9px;padding:0.5rem 0.65rem;"><div style="font-size:0.55rem;text-transform:uppercase;letter-spacing:0.07em;color:#334155;margin-bottom:0.12rem;">${l}</div><div style="font-size:0.82rem;font-weight:700;color:#cbd5e1;">${v}</div></div>`).join('')}
+        ${[['Diameter',st.diam.toLocaleString()+' km'],['Gravity',st.grav+'× Earth'],['Temperature',st.tMin+'°C – '+st.tMax+'°C'],['Day Length',st.day+' hours'],['Year Length',st.year+' Earth yrs'],['Moons',st.moons+' moon'+(st.moons!==1?'s':'')]].map(([l,v])=>`<div style="background:rgba(255,255,255,0.04);border-radius:9px;padding:0.5rem 0.65rem;"><div style="font-size:0.55rem;text-transform:uppercase;letter-spacing:0.07em;color:#e2e8f0;margin-bottom:0.12rem;">${l}</div><div style="font-size:0.82rem;font-weight:700;color:#cbd5e1;">${v}</div></div>`).join('')}
       </div>
-      ${features.length?`<div style="font-size:0.55rem;text-transform:uppercase;letter-spacing:0.14em;color:#334155;margin-bottom:0.5rem;">Key Features</div><div style="margin-bottom:1rem;">${features.map(f=>`<div style="font-size:0.78rem;color:#64748b;padding:0.18rem 0;border-bottom:1px solid rgba(255,255,255,0.04);">● ${f}</div>`).join('')}</div>`:''}
-      ${promptExcerpt?`<div style="font-size:0.55rem;text-transform:uppercase;letter-spacing:0.14em;color:#334155;margin-bottom:0.45rem;">Planet Description</div><div style="font-size:0.73rem;line-height:1.65;color:#475569;font-style:italic;border-left:2px solid rgba(125,211,252,0.2);padding-left:0.7rem;margin-bottom:0.8rem;">${promptExcerpt}</div>`:''}
+      ${features.length?`<div style="font-size:0.55rem;text-transform:uppercase;letter-spacing:0.14em;color:#e2e8f0;margin-bottom:0.5rem;">Key Features</div><div style="margin-bottom:0.2rem;">${features.map(f=>`<div style="font-size:0.78rem;color:#7dd3fc;padding:0.18rem 0;border-bottom:1px solid rgba(255,255,255,0.04);">● ${f}</div>`).join('')}</div>`:''}
+      ${lifeHtml}
+      ${earthHtml}
     </div>
-    <div style="padding:0.6rem 1.6rem;border-top:1px solid rgba(255,255,255,0.05);font-size:0.58rem;color:#1e3a5f;text-align:center;letter-spacing:0.06em;">BUILT WITH PLANET BUILDER · planet-builder.onrender.com</div>
+    <div style="padding:0.6rem 1.6rem;border-top:1px solid rgba(255,255,255,0.05);font-size:0.58rem;color:#475569;text-align:center;letter-spacing:0.06em;">BUILT WITH PLANET BUILDER · planet-builder.onrender.com</div>
   </div>`;
   // Inject into page, print, then remove — no popup needed
   let ov=document.getElementById('pp-print-overlay');
